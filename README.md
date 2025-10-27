@@ -25,12 +25,3 @@
 | API Integration | FatSecret API |
 | IDE | Android Studio |
 | Version Control | Git, GitHub |
-
----
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/<your-username>/SafeBite.git
-cd SafeBite
