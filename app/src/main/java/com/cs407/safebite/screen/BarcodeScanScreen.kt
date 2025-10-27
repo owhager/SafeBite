@@ -118,7 +118,7 @@ fun BarcodeScanScreen (onNavigateToProfile: () -> Unit, onNavigateToRecents: () 
                         Icon(Icons.Default.Menu, contentDescription = "Menu")
                     }
                     Text(
-                        text = stringResource(id = R.string.app_name),
+                        text = "testing",
                         style = MaterialTheme.typography.headlineLarge,
                         modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
                     )

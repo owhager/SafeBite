@@ -39,15 +39,15 @@ fun AppNavigation() {
         navController = navController, startDestination = "home"
     ) {
         composable("home") {
+            ProfileScreen(
+                onNavigateToHome = { navController.navigate(route = "home")}
+            )
+        }
+        composable("barcode_scan") {
             BarcodeScanScreen(
                 onNavigateToProfile = { navController.navigate("profile") },
                 onNavigateToRecents = { navController.navigate("recents") },
                 onNavigateToInput = { navController.navigate("input_allergies") }
-            )
-        }
-        composable("profile") {
-            ProfileScreen(
-                onNavigateToHome = { navController.navigate(route = "home")}
             )
         }
         composable("recents") {
