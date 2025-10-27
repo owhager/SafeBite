@@ -19,6 +19,9 @@ import com.cs407.safebite.screen.InputScreen
 import com.cs407.safebite.screen.ProfileScreen
 import com.cs407.safebite.screen.RecentsScreen
 import com.cs407.safebite.ui.theme.SafeBiteTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs407.safebite.screen.ResultsScreen
+import com.cs407.safebite.viewmodel.AllergenViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,38 +29,67 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SafeBiteTheme {
-                AppNavigation()
+                val vm: AllergenViewModel = viewModel() // one shared instance
+                AppNavigation(vm)
             }
         }
     }
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(vm: AllergenViewModel) {
     val navController = rememberNavController()
     NavHost(
-        navController = navController, startDestination = "home"
+        navController = navController, startDestination = "profile"
     ) {
-        composable("home") {
+        composable("profile") {
             ProfileScreen(
-                onNavigateToHome = { navController.navigate(route = "home")}
+                vm = vm,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToRecents = { navController.navigate("recents") },
+                onNavigateToInput   = { navController.navigate("input_allergies") },
+                onNavigateToProfile = { navController.navigate("profile") },
+                onNavigateToScan    = { navController.navigate("barcode_scan") },
+                onAddMoreAllergens = { navController.navigate("input_allergies")},
             )
         }
         composable("barcode_scan") {
             BarcodeScanScreen(
-                onNavigateToProfile = { navController.navigate("profile") },
+                onNavigateBack = { navController.popBackStack() },
                 onNavigateToRecents = { navController.navigate("recents") },
-                onNavigateToInput = { navController.navigate("input_allergies") }
+                onNavigateToInput   = { navController.navigate("input_allergies") },
+                onNavigateToProfile = { navController.navigate("profile") },
+                onNavigateToScan    = { navController.navigate("barcode_scan") },
+                onNavigateToResults = { navController.navigate("results") }
             )
         }
         composable("recents") {
             RecentsScreen(
-                onNavigateToHome = { navController.navigate(route = "home")}
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToRecents = { navController.navigate("recents") },
+                onNavigateToInput = { navController.navigate("input_allergies") },
+                onNavigateToProfile = { navController.navigate("profile") },
+                onNavigateToScan = { navController.navigate("barcode_scan") },
+                onNavigateToResults = { navController.navigate("results") }
             )
         }
         composable("input_allergies") {
             InputScreen(
-                onNavigateToHome = { navController.navigate(route = "home")}
+                vm = vm,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToRecents = { navController.navigate("recents") },
+                onNavigateToInput   = { navController.navigate("input_allergies") },
+                onNavigateToProfile = { navController.navigate("profile") },
+                onNavigateToScan    = { navController.navigate("barcode_scan") }
+            )
+        }
+        composable("results") {
+            ResultsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToRecents = { navController.navigate("recents") },
+                onNavigateToInput = { navController.navigate("input_allergies") },
+                onNavigateToProfile = { navController.navigate("profile") },
+                onNavigateToScan = { navController.navigate("barcode_scan") }
             )
         }
     }
