@@ -1,15 +1,16 @@
 package com.cs407.safebite.component
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
-/*
-* Creates TopAppBar with back button, title, and menu button.
-*/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UnifiedTopBar(
@@ -20,51 +21,68 @@ fun UnifiedTopBar(
     onNavigateToInput: () -> Unit,
     onNavigateToScan: () -> Unit
 ) {
-    var menuOpen by remember { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
 
-    CenterAlignedTopAppBar(
+    TopAppBar(
         title = { Text(title) },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+        ),
         navigationIcon = {
             if (onNavigateBack != null) {
-                IconButton(onClick = onNavigateBack) {
+                IconButton(onClick = { onNavigateBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
+                        contentDescription = "Back",
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
         },
         actions = {
-            IconButton(onClick = { menuOpen = true }) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu")
+            IconButton(onClick = { menuExpanded = true }) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menu",
+                    modifier = Modifier.size(32.dp)
+                )
             }
             DropdownMenu(
-                expanded = menuOpen,
-                onDismissRequest = { menuOpen = false }
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Profile") },
-                    onClick = { menuOpen = false; onNavigateToProfile() }
+                    text = { Text("My Profile") },
+                    onClick = {
+                        onNavigateToProfile()
+                        menuExpanded = false
+                    }
                 )
                 DropdownMenuItem(
-                    text = { Text("Recents") },
-                    onClick = { menuOpen = false; onNavigateToRecents() }
+                    text = { Text("Recent Scans") },
+                    onClick = {
+                        onNavigateToRecents()
+                        menuExpanded = false
+                    }
                 )
                 DropdownMenuItem(
-                    text = { Text("Input Allergens") },
-                    onClick = { menuOpen = false; onNavigateToInput() }
+                    text = { Text("My Allergens") },
+                    onClick = {
+                        onNavigateToInput()
+                        menuExpanded = false
+                    }
                 )
                 DropdownMenuItem(
-                    text = { Text("Scan Barcode") },
-                    onClick = { menuOpen = false; onNavigateToScan() }
+                    text = { Text("Scan") },
+                    onClick = {
+                        onNavigateToScan()
+                        menuExpanded = false
+                    }
                 )
             }
-        },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color(0xFFE6E6E6),
-            titleContentColor = Color.Black,
-            navigationIconContentColor = Color.Black,
-            actionIconContentColor = Color.Black
-        )
+        }
     )
 }

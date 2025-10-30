@@ -1,32 +1,13 @@
 package com.cs407.safebite.screen
 
-import com.cs407.safebite.R
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.cs407.safebite.ui.theme.AppTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Checkbox
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.*
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.cs407.safebite.component.UnifiedTopBar
 import com.cs407.safebite.viewmodel.AllergenViewModel
 
@@ -41,15 +22,12 @@ fun ProfileScreen(
     onAddMoreAllergens: () -> Unit = {},
     onNavigateToScan: () -> Unit
 ) {
-    val gradientTopColor = AppTheme.customColors.gradientTop
-    val gradientBottomColor = AppTheme.customColors.gradientBottom
     val checkedItems = vm.checkedItems()
 
     Scaffold(
-        // back button, screen title, and menu displayed.
         topBar = {
             UnifiedTopBar(
-                title = "User allergens",
+                title = "User Allergens",
                 onNavigateBack = { onNavigateBack() },
                 onNavigateToProfile = { onNavigateToProfile() },
                 onNavigateToRecents = { onNavigateToRecents() },
@@ -57,77 +35,62 @@ fun ProfileScreen(
                 onNavigateToScan = { onNavigateToScan() }
             )
         },
-        containerColor = Color.Transparent
-    ) { inner ->
-        Box(
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(gradientTopColor, gradientBottomColor)
-                    )
-                )
-                .padding(inner)
+                .padding(innerPadding)
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                // Section label
-                Text(
-                    text = "Saved User allergens",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                    modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
-                )
+            Text(
+                text = "Saved User Allergens",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+            )
 
-                // Saved allergens
-                checkedItems.forEach { item ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = true,
-                            onCheckedChange = { checked ->
-                                vm.setChecked(item, checked) // if false, it disappears from this screen
-                            }
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(item, style = MaterialTheme.typography.bodyLarge)
-                    }
-                }
-
-                Spacer(Modifier.weight(1f))
-
-                // Check box to navigate to input screen
+            checkedItems.forEach { item ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .clickable { onAddMoreAllergens() },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = false,
-                        onCheckedChange = { onAddMoreAllergens() }
+                        checked = true,
+                        onCheckedChange = { checked -> vm.setChecked(item, checked) }
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Add more allergens",
-                        style = MaterialTheme.typography.bodyMedium
+                        text = item,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
+            }
 
-                // Button to navigate to scan screen
-                Button(
-                    onClick = { onNavigateToScan() },
-                    modifier = Modifier.fillMaxWidth().height(50.dp)
-                ) {
-                    Text("Scan item!", style = MaterialTheme.typography.bodyLarge)
-                }
+            Spacer(Modifier.weight(1f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { onAddMoreAllergens() },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = false,
+                    onCheckedChange = { onAddMoreAllergens() }
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = "Add more allergens",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Button(
+                onClick = { onNavigateToScan() },
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            ) {
+                Text("Scan item!", style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
