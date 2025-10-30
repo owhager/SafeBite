@@ -1,7 +1,13 @@
 package com.cs407.safebite.screen
 
-import com.cs407.safebite.component.UnifiedTopBar
-import androidx.compose.foundation.background
+import android.Manifest
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.*
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,19 +16,24 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.common.InputImage
+import com.cs407.safebite.component.UnifiedTopBar
 
 @Composable
-fun BarcodeScanScreen (
+fun BarcodeScanScreen(
     onNavigateBack: () -> Unit,
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
@@ -35,6 +46,13 @@ fun BarcodeScanScreen (
     var barcode by remember { mutableStateOf("") }
     var inputError by remember { mutableStateOf(false) }
 
+    var hasPermission by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        hasPermission = granted
+        if (!granted) Toast.makeText(context, "Camera permission required", Toast.LENGTH_SHORT).show()
+    }
+    LaunchedEffect(Unit) { launcher.launch(Manifest.permission.CAMERA) }
 
     fun submitManualIfValid() {
         val valid = barcode.isNotBlank()
@@ -49,15 +67,15 @@ fun BarcodeScanScreen (
         topBar = {
             UnifiedTopBar(
                 title = "Scan Barcode",
-                onNavigateBack = { onNavigateBack() },
-                onNavigateToProfile = { onNavigateToProfile() },
-                onNavigateToRecents = { onNavigateToRecents() },
-                onNavigateToInput = { onNavigateToInput() },
-                onNavigateToScan = { onNavigateToScan() }
+                onNavigateBack = onNavigateBack,
+                onNavigateToProfile = onNavigateToProfile,
+                onNavigateToRecents = onNavigateToRecents,
+                onNavigateToInput = onNavigateToInput,
+                onNavigateToScan = onNavigateToScan
             )
         },
         containerColor = MaterialTheme.colorScheme.background
-    ){ innerPadding ->
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -65,21 +83,23 @@ fun BarcodeScanScreen (
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Section label
-            Text(
-                text = "Camera not implemented yet",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
-            )
-
-            Button(
-                onClick = { showConfirm = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text("Scan!", style = MaterialTheme.typography.bodyLarge)
+            // Camera Preview
+            if (hasPermission) {
+                CameraPreviewWithBarcode(
+                    onBarcodeDetected = { code ->
+                        if (!showConfirm) {
+                            barcode = code
+                            showConfirm = true
+                        }
+                    }
+                )
+            } else {
+                Text(
+                    text = "Requesting camera permission...",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
         }
 
@@ -96,13 +116,12 @@ fun BarcodeScanScreen (
                             .padding(16.dp)
                     ) {
                         Text(
-                            text = "Is Sample Item correct?",
+                            text = "Is this item correct?",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(Modifier.height(16.dp))
-
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -110,12 +129,12 @@ fun BarcodeScanScreen (
                                 .heightIn(min = 120.dp)
                                 .border(
                                     width = 3.dp,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Place holder for item scanned.",
+                                text = barcode.ifEmpty { "No barcode detected" },
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -164,7 +183,6 @@ fun BarcodeScanScreen (
                         )
 
                         Spacer(Modifier.height(12.dp))
-
                         Text(
                             text = "Scan",
                             style = MaterialTheme.typography.bodyLarge,
@@ -179,10 +197,7 @@ fun BarcodeScanScreen (
                         )
 
                         Spacer(Modifier.height(8.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "Input",
                                 style = MaterialTheme.typography.bodyLarge,
@@ -221,7 +236,6 @@ fun BarcodeScanScreen (
                         }
 
                         Spacer(Modifier.height(12.dp))
-
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Spacer(Modifier.weight(1f))
                             TextButton(onClick = { submitManualIfValid() }) {
@@ -232,5 +246,79 @@ fun BarcodeScanScreen (
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CameraPreviewWithBarcode(onBarcodeDetected: (String) -> Unit) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    AndroidView(
+        factory = { ctx ->
+            val previewView = PreviewView(ctx).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    600
+                )
+            }
+
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+            cameraProviderFuture.addListener({
+                val cameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
+                }
+
+                val analysis = ImageAnalysis.Builder()
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+                    .apply {
+                        setAnalyzer(
+                            ContextCompat.getMainExecutor(ctx),
+                            BarcodeAnalyzer(onBarcodeDetected)
+                        )
+                    }
+
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    analysis
+                )
+            }, ContextCompat.getMainExecutor(ctx))
+
+            previewView
+        },
+        modifier = Modifier
+            .fillMaxSize()
+    )
+}
+
+private class BarcodeAnalyzer(
+    private val onBarcodeDetected: (String) -> Unit
+) : ImageAnalysis.Analyzer {
+    private val scanner = BarcodeScanning.getClient()
+    private var lastDetected = ""
+
+    @ExperimentalGetImage
+    override fun analyze(imageProxy: ImageProxy) {
+        val mediaImage = imageProxy.image ?: run {
+            imageProxy.close(); return
+        }
+
+        val inputImage = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+        scanner.process(inputImage)
+            .addOnSuccessListener { barcodes ->
+                for (barcode in barcodes) {
+                    barcode.rawValue?.let { code ->
+                        if (code != lastDetected) {
+                            lastDetected = code
+                            onBarcodeDetected(code)
+                        }
+                    }
+                }
+            }
+            .addOnCompleteListener { imageProxy.close() }
     }
 }
