@@ -1,20 +1,13 @@
 package com.cs407.safebite.screen
 
-import com.cs407.safebite.component.UnifiedTopBar
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.cs407.safebite.ui.theme.AppTheme
+import com.cs407.safebite.component.UnifiedTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,16 +16,12 @@ fun RecentsScreen(
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToScan: () -> Unit,
-    onNavigateToResults: () -> Unit
+    onNavigateToScan: () -> Unit
 ) {
-    val gradientTopColor = AppTheme.customColors.gradientTop
-    val gradientBottomColor = AppTheme.customColors.gradientBottom
-
     Scaffold(
         topBar = {
             UnifiedTopBar(
-                title = "Results",
+                title = "Recent Scans",
                 onNavigateBack = { onNavigateBack() },
                 onNavigateToProfile = { onNavigateToProfile() },
                 onNavigateToRecents = { onNavigateToRecents() },
@@ -40,48 +29,30 @@ fun RecentsScreen(
                 onNavigateToScan = { onNavigateToScan() }
             )
         },
-        containerColor = Color.Transparent
-    ) { inner ->
-        Box(
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(gradientTopColor, gradientBottomColor)
-                    )
-                )
-                .padding(inner)
+                .padding(innerPadding)
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Text(
+                text = "Past Scanned Items",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+            )
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                // Single recent item (Peanut Butter)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(2.dp, Color.Black, RoundedCornerShape(24.dp))
-                        .clickable { onNavigateToResults() }
-                        .padding(vertical = 14.dp, horizontal = 18.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Peanut Butter",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                            color = Color.Black
-                        )
-                        Text(
-                            text = "Natural Food Co.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Black
-                        )
-                    }
-                }
+                Text(
+                    text = "No items scanned yet.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
