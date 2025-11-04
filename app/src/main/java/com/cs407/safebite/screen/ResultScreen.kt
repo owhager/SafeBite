@@ -20,6 +20,7 @@ fun ResultScreen(
     onNavigateToInput: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToScan: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val productName = "Peanut Butter"
     val brandName = "Natural Food Co."
@@ -34,7 +35,8 @@ fun ResultScreen(
                 onNavigateToProfile = { onNavigateToProfile() },
                 onNavigateToRecents = { onNavigateToRecents() },
                 onNavigateToInput = { onNavigateToInput() },
-                onNavigateToScan = { onNavigateToScan() }
+                onNavigateToScan = { onNavigateToScan() },
+                onLogout = {onLogout()}
             )
         },
         containerColor = MaterialTheme.colorScheme.background

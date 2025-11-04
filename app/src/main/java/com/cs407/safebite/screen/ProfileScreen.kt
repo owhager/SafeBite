@@ -6,23 +6,30 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.cs407.safebite.component.UnifiedTopBar
+import com.cs407.safebite.data.UserState
 import com.cs407.safebite.viewmodel.AllergenViewModel
+import com.cs407.safebite.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-//    vm: AllergenViewModel,
+    allergenViewModel: AllergenViewModel,
+    userState: UserState,
     onNavigateBack: () -> Unit,
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onAddMoreAllergens: () -> Unit = {},
-    onNavigateToScan: () -> Unit
+    onNavigateToScan: () -> Unit,
+    onLogout: () -> Unit,
+    onDelete: () -> Unit
 ) {
-//    val checkedItems = vm.checkedItems()
+    val checkedItems = allergenViewModel.checkedItems()
 
     Scaffold(
         topBar = {
@@ -33,7 +40,8 @@ fun ProfileScreen(
                 onNavigateToRecents = { onNavigateToRecents() },
                 onNavigateToInput = { onNavigateToInput() },
                 onNavigateToScan = { onNavigateToScan() },
-                onLogout = { }
+                onLogout = { onLogout() },
+                onDelete = { onDelete() }
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -45,29 +53,34 @@ fun ProfileScreen(
                 .padding(16.dp)
         ) {
             Text(
+                text = "Hello, " + userState.name,
+                fontSize = 30.sp,
+                fontStyle = FontStyle.Italic
+            )
+            Text(
                 text = "Saved User Allergens",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
             )
 
-//            checkedItems.forEach { item ->
-//                Row(
-//                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    Checkbox(
-//                        checked = true,
-//                        onCheckedChange = { checked -> vm.setChecked(item, checked) }
-//                    )
-//                    Spacer(Modifier.width(8.dp))
-//                    Text(
-//                        text = item,
-//                        style = MaterialTheme.typography.bodyLarge,
-//                        color = MaterialTheme.colorScheme.onBackground
-//                    )
-//                }
-//            }
+            checkedItems.forEach { item ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = true,
+                        onCheckedChange = { checked -> allergenViewModel.setChecked(item, checked) }
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = item,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
 
             Spacer(Modifier.weight(1f))
 

@@ -39,7 +39,8 @@ fun BarcodeScanScreen(
     onNavigateToInput: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToScan: () -> Unit,
-    onNavigateToResults: () -> Unit
+    onNavigateToResults: () -> Unit,
+    onLogout: () -> Unit
 ) {
     var showConfirm by remember { mutableStateOf(false) }
     var showManual by remember { mutableStateOf(false) }
@@ -71,7 +72,8 @@ fun BarcodeScanScreen(
                 onNavigateToProfile = onNavigateToProfile,
                 onNavigateToRecents = onNavigateToRecents,
                 onNavigateToInput = onNavigateToInput,
-                onNavigateToScan = onNavigateToScan
+                onNavigateToScan = onNavigateToScan,
+                onLogout = onLogout
             )
         },
         containerColor = MaterialTheme.colorScheme.background

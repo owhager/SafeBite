@@ -21,35 +21,35 @@ import com.cs407.safebite.viewmodel.AllergenViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputScreen(
-//    vm: AllergenViewModel,
+    allergenViewModel: AllergenViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToScan: () -> Unit,
 ) {
-//    val allergens = vm.allergens
-//    val checkedMap = vm.checkedMap
+    val allergens = allergenViewModel.allergens
+    val checkedMap = allergenViewModel.checkedMap
 
     var showAddDialog by remember { mutableStateOf(false) }
     var newAllergen by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
-//    fun addAllergenIfValid() {
-//        val candidate = newAllergen.trim()
-//        when {
-//            candidate.isEmpty() -> error = "Allergen name can’t be empty."
-//            allergens.any { it.equals(candidate, ignoreCase = true) } ->
-//                error = "\"$candidate\" is already in the list."
-//            else -> {
-//                vm.addAllergen(candidate)
-//                checkedMap[candidate] = true
-//                newAllergen = ""
-//                error = null
-//                showAddDialog = false
-//            }
-//        }
-//    }
+    fun addAllergenIfValid() {
+        val candidate = newAllergen.trim()
+        when {
+            candidate.isEmpty() -> error = "Allergen name can’t be empty."
+            allergens.any { it.equals(candidate, ignoreCase = true) } ->
+                error = "\"$candidate\" is already in the list."
+            else -> {
+                allergenViewModel.addAllergen(candidate)
+                checkedMap[candidate] = true
+                newAllergen = ""
+                error = null
+                showAddDialog = false
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -78,29 +78,29 @@ fun InputScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-//            LazyColumn(
-//                modifier = Modifier.weight(1f),
-//                verticalArrangement = Arrangement.spacedBy(8.dp),
-//                contentPadding = PaddingValues(bottom = 8.dp)
-//            ) {
-//                items(allergens, key = { it.lowercase() }) { item ->
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Checkbox(
-//                            checked = checkedMap[item] == true,
-//                            onCheckedChange = { checked -> vm.setChecked(item, checked) }
-//                        )
-//                        Spacer(Modifier.width(8.dp))
-//                        Text(
-//                            item,
-//                            style = MaterialTheme.typography.bodyLarge,
-//                            color = MaterialTheme.colorScheme.onBackground
-//                        )
-//                    }
-//                }
-//            }
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 8.dp)
+            ) {
+                items(allergens, key = { it.lowercase() }) { item ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = checkedMap[item] == true,
+                            onCheckedChange = { checked -> allergenViewModel.setChecked(item, checked) }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            item,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+            }
 
             Column {
                 Button(
@@ -119,34 +119,34 @@ fun InputScreen(
             }
 
             if (showAddDialog) {
-//                AlertDialog(
-//                    onDismissRequest = { showAddDialog = false },
-//                    title = { Text("Add a New Allergen") },
-//                    text = {
-//                        Column {
-//                            OutlinedTextField(
-//                                value = newAllergen,
-//                                onValueChange = {
-//                                    newAllergen = it
-//                                    if (error != null) error = null
-//                                },
-//                                singleLine = true,
-//                                placeholder = { Text("e.g., Wheat") },
-//                                isError = error != null,
-//                                supportingText = { if (error != null) Text(error!!) },
-//                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-//                                keyboardActions = KeyboardActions(onDone = { addAllergenIfValid() }),
-//                                modifier = Modifier.fillMaxWidth()
-//                            )
-//                        }
-//                    },
-//                    confirmButton = {
-//                        TextButton(onClick = { addAllergenIfValid() }) { Text("Add") }
-//                    },
-//                    dismissButton = {
-//                        TextButton(onClick = { showAddDialog = false }) { Text("Cancel") }
-//                    }
-                //)
+                AlertDialog(
+                    onDismissRequest = { showAddDialog = false },
+                    title = { Text("Add a New Allergen") },
+                    text = {
+                        Column {
+                            OutlinedTextField(
+                                value = newAllergen,
+                                onValueChange = {
+                                    newAllergen = it
+                                    if (error != null) error = null
+                                },
+                                singleLine = true,
+                                placeholder = { Text("e.g., Wheat") },
+                                isError = error != null,
+                                supportingText = { if (error != null) Text(error!!) },
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = { addAllergenIfValid() }),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { addAllergenIfValid() }) { Text("Add") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showAddDialog = false }) { Text("Cancel") }
+                    }
+                )
             }
         }
     }

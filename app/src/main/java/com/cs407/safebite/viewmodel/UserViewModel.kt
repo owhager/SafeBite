@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import com.cs407.safebite.data.AllergenDatabase
+import com.cs407.safebite.data.User
 //import com.cs407.safebite.NoteScreen
 import com.cs407.safebite.data.UserState
 import com.google.firebase.Firebase
@@ -44,50 +46,50 @@ class UserViewModel : ViewModel() {
     }
 
     // Insert user locally
-//    fun insertUserLocally(uid: String, context: Context) {
-//        viewModelScope.launch {
-//            val userDao = NoteDatabase.getDatabase(context).userDao()
-//            val existingUser = userDao.getByUID(uid)
-//            if (existingUser == null) {
-//                userDao.insert(User(userUID = uid))
-//            }
-//        }
-//    }
+    fun insertUserLocally(uid: String, context: Context) {
+        viewModelScope.launch {
+            val userDao = AllergenDatabase.getDatabase(context).userDao()
+            val existingUser = userDao.getByUID(uid)
+            if (existingUser == null) {
+                userDao.insert(User(userUID = uid))
+            }
+        }
+    }
 
     // Delete user locally
-//    fun deleteAccount(context: Context, navController: NavHostController) {
-//        viewModelScope.launch {
-//            val user = auth.currentUser
-//
-//            if (user != null) {
-//                val uid = user.uid
-//
-//                // 1. Delete locally first
-//                val userDao = NoteDatabase.getDatabase(context).userDao()
-//                val existingUser = userDao.getByUID(uid)
-//                if (existingUser != null) {
-//                    val deleteDao = NoteDatabase.getDatabase(context).deleteDao()
-//                    deleteDao.delete(existingUser.userId)
-//                }
-//
-//                // 2. Delete from Firebase
-//                user.delete()
-//                    .addOnCompleteListener { task ->
-//                        if (task.isSuccessful) {
-//                            // 3. Reset local user state
-//                            setUser(UserState())
-//
-//                            // 4. Navigate back to login
-//                            navController.navigate(NoteScreen.Login.name) {
-//                                popUpTo(0) { inclusive = true }
-//                            }
-//                        } else {
-//                            // Optional: handle error
-//                        }
-//                    }
-//            }
-//        }
-//    }
+    fun deleteAccount(context: Context, navController: NavHostController) {
+        viewModelScope.launch {
+            val user = auth.currentUser
+
+            if (user != null) {
+                val uid = user.uid
+
+                // 1. Delete locally first
+                val userDao = AllergenDatabase.getDatabase(context).userDao()
+                val existingUser = userDao.getByUID(uid)
+                if (existingUser != null) {
+                    val deleteDao = AllergenDatabase.getDatabase(context).deleteDao()
+                    deleteDao.delete(existingUser.userId)
+                }
+
+                // 2. Delete from Firebase
+                user.delete()
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // 3. Reset local user state
+                            setUser(UserState())
+
+                            // 4. Navigate back to login
+                            navController.navigate("login") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        } else {
+                            // Optional: handle error
+                        }
+                    }
+            }
+        }
+    }
 
     // Logout
     fun logout(navController: NavHostController) {
@@ -98,7 +100,7 @@ class UserViewModel : ViewModel() {
         setUser(UserState())
 
         // Navigate back to login
-        navController.navigate("Login") {
+        navController.navigate("login") {
             popUpTo(0) { inclusive = true }
         }
     }

@@ -16,7 +16,8 @@ fun RecentsScreen(
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToScan: () -> Unit
+    onNavigateToScan: () -> Unit,
+    onLogout: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -26,7 +27,8 @@ fun RecentsScreen(
                 onNavigateToProfile = { onNavigateToProfile() },
                 onNavigateToRecents = { onNavigateToRecents() },
                 onNavigateToInput = { onNavigateToInput() },
-                onNavigateToScan = { onNavigateToScan() }
+                onNavigateToScan = { onNavigateToScan() },
+                onLogout = {onLogout()}
             )
         },
         containerColor = MaterialTheme.colorScheme.background

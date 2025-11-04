@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,6 +25,7 @@ import com.cs407.safebite.screen.RecentsScreen
 import com.cs407.safebite.ui.theme.SafeBiteTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.cs407.safebite.screen.AskNamePage
 import com.cs407.safebite.screen.LoginPage
 import com.cs407.safebite.screen.ResultScreen
 import com.cs407.safebite.viewmodel.AllergenViewModel
@@ -42,7 +44,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SafeBiteTheme {
-//                val vm: AllergenViewModel = viewModel()
                 AppNavigation()
             }
         }
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(
+    allergenViewModel: AllergenViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
@@ -60,13 +62,17 @@ fun AppNavigation(
         // if uid is not empty, meaning user has logged in, then check if they have username
         if (userState.uid.isNotEmpty()) {
             // if they dont have username bring to ask name page
-//            if (userState.name.isEmpty()) {
-//                navController.navigate("AskNamePage")
-//            }
-//            // else bring to profile
-//            else {
-                navController.navigate("profile")
-//            }
+            if (userState.name.isEmpty()) {
+                navController.navigate("askNamePage") {
+                    popUpTo("login") {inclusive = true}
+                }
+            }
+            // else bring to profile
+            else {
+                navController.navigate("profile") {
+                    popUpTo("login") {inclusive = true}
+                }
+            }
 
         }
         // else uid is empty, bring to login
@@ -85,15 +91,37 @@ fun AppNavigation(
                 userViewModel.setUser(userState)
             })
         }
+        composable("askNamePage") {
+            val context = LocalContext.current
+
+            AskNamePage(onSuccess = {updatedUser ->
+                // Update ViewModel with new display name
+                userViewModel.setUser(
+                    userState.copy(name = updatedUser.displayName ?: "")
+                )
+
+                // Insert user into Room db
+                userViewModel.insertUserLocally(updatedUser.uid, context)
+
+                // Navigate to profile after name is set
+                navController.navigate("profile") {
+                    popUpTo("askNamePage") { inclusive = true }
+                }
+            })
+        }
         composable("profile") {
+            val context = LocalContext.current
             ProfileScreen(
-//                vm = vm,
+                allergenViewModel = allergenViewModel,
+                userState = userState,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToRecents = { navController.navigate("recents") },
                 onNavigateToInput   = { navController.navigate("input_allergies") },
                 onNavigateToProfile = { navController.navigate("profile") },
                 onNavigateToScan    = { navController.navigate("barcode_scan") },
                 onAddMoreAllergens = { navController.navigate("input_allergies")},
+                onLogout = {userViewModel.logout(navController)},
+                onDelete = {userViewModel.deleteAccount(context, navController)}
             )
         }
         composable("barcode_scan") {
@@ -103,7 +131,8 @@ fun AppNavigation(
                 onNavigateToInput   = { navController.navigate("input_allergies") },
                 onNavigateToProfile = { navController.navigate("profile") },
                 onNavigateToScan    = { navController.navigate("barcode_scan") },
-                onNavigateToResults = { navController.navigate("results") }
+                onNavigateToResults = { navController.navigate("results") },
+                onLogout = {userViewModel.logout(navController)}
             )
         }
         composable("recents") {
@@ -113,11 +142,12 @@ fun AppNavigation(
                 onNavigateToInput = { navController.navigate("input_allergies") },
                 onNavigateToProfile = { navController.navigate("profile") },
                 onNavigateToScan = { navController.navigate("barcode_scan") },
+                onLogout = {userViewModel.logout(navController)}
             )
         }
         composable("input_allergies") {
             InputScreen(
-//                vm = vm,
+                allergenViewModel = allergenViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToRecents = { navController.navigate("recents") },
                 onNavigateToInput   = { navController.navigate("input_allergies") },
@@ -131,7 +161,8 @@ fun AppNavigation(
                 onNavigateToRecents = { navController.navigate("recents") },
                 onNavigateToInput = { navController.navigate("input_allergies") },
                 onNavigateToProfile = { navController.navigate("profile") },
-                onNavigateToScan = { navController.navigate("barcode_scan") }
+                onNavigateToScan = { navController.navigate("barcode_scan") },
+                onLogout = {userViewModel.logout(navController)}
             )
         }
     }

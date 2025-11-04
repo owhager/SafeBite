@@ -15,4 +15,5 @@
     <string name="logout_button">Log Out</string>
     <string name="logout_description">Log Out Button</string>
     <string name="del_acc_button">Delete Account</string>
+    <string name="note_database">noteDatabase</string>
 </resources>
