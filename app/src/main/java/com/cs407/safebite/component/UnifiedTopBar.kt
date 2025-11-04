@@ -9,7 +9,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cs407.safebite.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,7 +21,8 @@ fun UnifiedTopBar(
     onNavigateToProfile: () -> Unit,
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
-    onNavigateToScan: () -> Unit
+    onNavigateToScan: () -> Unit,
+    onLogout: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -79,6 +82,14 @@ fun UnifiedTopBar(
                     text = { Text("Scan") },
                     onClick = {
                         onNavigateToScan()
+                        menuExpanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(R.string.logout_button)) },
+//                    leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null) },
+                    onClick = {
+                        onLogout()
                         menuExpanded = false
                     }
                 )

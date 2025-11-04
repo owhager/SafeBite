@@ -14,7 +14,7 @@ import com.cs407.safebite.viewmodel.AllergenViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    vm: AllergenViewModel,
+//    vm: AllergenViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
@@ -22,7 +22,7 @@ fun ProfileScreen(
     onAddMoreAllergens: () -> Unit = {},
     onNavigateToScan: () -> Unit
 ) {
-    val checkedItems = vm.checkedItems()
+//    val checkedItems = vm.checkedItems()
 
     Scaffold(
         topBar = {
@@ -32,7 +32,8 @@ fun ProfileScreen(
                 onNavigateToProfile = { onNavigateToProfile() },
                 onNavigateToRecents = { onNavigateToRecents() },
                 onNavigateToInput = { onNavigateToInput() },
-                onNavigateToScan = { onNavigateToScan() }
+                onNavigateToScan = { onNavigateToScan() },
+                onLogout = { }
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -50,23 +51,23 @@ fun ProfileScreen(
                 modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
             )
 
-            checkedItems.forEach { item ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = true,
-                        onCheckedChange = { checked -> vm.setChecked(item, checked) }
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = item,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
+//            checkedItems.forEach { item ->
+//                Row(
+//                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Checkbox(
+//                        checked = true,
+//                        onCheckedChange = { checked -> vm.setChecked(item, checked) }
+//                    )
+//                    Spacer(Modifier.width(8.dp))
+//                    Text(
+//                        text = item,
+//                        style = MaterialTheme.typography.bodyLarge,
+//                        color = MaterialTheme.colorScheme.onBackground
+//                    )
+//                }
+//            }
 
             Spacer(Modifier.weight(1f))
 

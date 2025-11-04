@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
@@ -20,31 +23,71 @@ import com.cs407.safebite.screen.ProfileScreen
 import com.cs407.safebite.screen.RecentsScreen
 import com.cs407.safebite.ui.theme.SafeBiteTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.cs407.safebite.screen.LoginPage
 import com.cs407.safebite.screen.ResultScreen
 import com.cs407.safebite.viewmodel.AllergenViewModel
+import com.cs407.safebite.viewmodel.UserViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 class MainActivity : ComponentActivity() {
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        auth = Firebase.auth
+
         enableEdgeToEdge()
         setContent {
             SafeBiteTheme {
-                val vm: AllergenViewModel = viewModel()
-                AppNavigation(vm)
+//                val vm: AllergenViewModel = viewModel()
+                AppNavigation()
             }
         }
     }
 }
 
 @Composable
-fun AppNavigation(vm: AllergenViewModel) {
-    val navController = rememberNavController()
+fun AppNavigation(
+    userViewModel: UserViewModel = viewModel(),
+    navController: NavHostController = rememberNavController()
+) {
+    val userState by userViewModel.userState.collectAsState()
+
+    LaunchedEffect(userState.uid) {
+        // if uid is not empty, meaning user has logged in, then check if they have username
+        if (userState.uid.isNotEmpty()) {
+            // if they dont have username bring to ask name page
+//            if (userState.name.isEmpty()) {
+//                navController.navigate("AskNamePage")
+//            }
+//            // else bring to profile
+//            else {
+                navController.navigate("profile")
+//            }
+
+        }
+        // else uid is empty, bring to login
+        else {
+            navController.navigate("login") {
+                popUpTo(0)
+            }
+        }
+    }
+
     NavHost(
         navController = navController, startDestination = "profile"
     ) {
+        composable("login") {
+            LoginPage(loginButtonClick = {userState ->
+                userViewModel.setUser(userState)
+            })
+        }
         composable("profile") {
             ProfileScreen(
-                vm = vm,
+//                vm = vm,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToRecents = { navController.navigate("recents") },
                 onNavigateToInput   = { navController.navigate("input_allergies") },
@@ -74,7 +117,7 @@ fun AppNavigation(vm: AllergenViewModel) {
         }
         composable("input_allergies") {
             InputScreen(
-                vm = vm,
+//                vm = vm,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToRecents = { navController.navigate("recents") },
                 onNavigateToInput   = { navController.navigate("input_allergies") },

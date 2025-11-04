@@ -2,6 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    // Firebase plugins
+    id("com.google.devtools.ksp")
+    id("com.google.gms.google-services")
+    kotlin("plugin.serialization") version "2.2.20"
 }
 
 android {
@@ -58,6 +62,11 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.4")
     implementation("androidx.camera:camera-view:1.3.4")
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.13")
+    //dependencies for firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+    implementation("com.google.firebase:firebase-auth")
+    // implementation(libs.androidx.compose.foundation.layout)
+    // ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
