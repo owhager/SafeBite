@@ -9,7 +9,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cs407.safebite.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,7 +22,9 @@ fun UnifiedTopBar(
     onNavigateToProfile: () -> Unit,
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
-    onNavigateToScan: () -> Unit
+    onNavigateToScan: () -> Unit,
+    onLogout: () -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -82,6 +87,24 @@ fun UnifiedTopBar(
                         menuExpanded = false
                     }
                 )
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(R.string.logout_button)) },
+                    onClick = {
+                        onLogout()
+                        menuExpanded = false
+                    }
+                )
+
+                // Only show on profile page (we'll only pass it from profile)
+                if (onDelete != null) {
+                    DropdownMenuItem(
+                        text = {Text(text = stringResource(R.string.del_acc_button), color = Color.Red)},
+                        onClick = {
+                            onDelete()
+                            menuExpanded = false
+                        }
+                    )
+                }
             }
         }
     )

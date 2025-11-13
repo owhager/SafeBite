@@ -6,23 +6,30 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.cs407.safebite.component.UnifiedTopBar
+import com.cs407.safebite.data.UserState
 import com.cs407.safebite.viewmodel.AllergenViewModel
+import com.cs407.safebite.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    vm: AllergenViewModel,
+    allergenViewModel: AllergenViewModel,
+    userState: UserState,
     onNavigateBack: () -> Unit,
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onAddMoreAllergens: () -> Unit = {},
-    onNavigateToScan: () -> Unit
+    onNavigateToScan: () -> Unit,
+    onLogout: () -> Unit,
+    onDelete: () -> Unit
 ) {
-    val checkedItems = vm.checkedItems()
+    val checkedItems = allergenViewModel.checkedItems()
 
     Scaffold(
         topBar = {
@@ -32,7 +39,9 @@ fun ProfileScreen(
                 onNavigateToProfile = { onNavigateToProfile() },
                 onNavigateToRecents = { onNavigateToRecents() },
                 onNavigateToInput = { onNavigateToInput() },
-                onNavigateToScan = { onNavigateToScan() }
+                onNavigateToScan = { onNavigateToScan() },
+                onLogout = { onLogout() },
+                onDelete = { onDelete() }
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -43,6 +52,11 @@ fun ProfileScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
+            Text(
+                text = "Hello, " + userState.name,
+                fontSize = 30.sp,
+                fontStyle = FontStyle.Italic
+            )
             Text(
                 text = "Saved User Allergens",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
@@ -57,7 +71,7 @@ fun ProfileScreen(
                 ) {
                     Checkbox(
                         checked = true,
-                        onCheckedChange = { checked -> vm.setChecked(item, checked) }
+                        onCheckedChange = { checked -> allergenViewModel.setChecked(item, checked) }
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(

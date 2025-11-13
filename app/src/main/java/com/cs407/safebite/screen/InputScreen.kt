@@ -21,15 +21,15 @@ import com.cs407.safebite.viewmodel.AllergenViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputScreen(
-    vm: AllergenViewModel,
+    allergenViewModel: AllergenViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToScan: () -> Unit,
 ) {
-    val allergens = vm.allergens
-    val checkedMap = vm.checkedMap
+    val allergens = allergenViewModel.allergens
+    val checkedMap = allergenViewModel.checkedMap
 
     var showAddDialog by remember { mutableStateOf(false) }
     var newAllergen by remember { mutableStateOf("") }
@@ -42,7 +42,7 @@ fun InputScreen(
             allergens.any { it.equals(candidate, ignoreCase = true) } ->
                 error = "\"$candidate\" is already in the list."
             else -> {
-                vm.addAllergen(candidate)
+                allergenViewModel.addAllergen(candidate)
                 checkedMap[candidate] = true
                 newAllergen = ""
                 error = null
@@ -59,7 +59,8 @@ fun InputScreen(
                 onNavigateToProfile = { onNavigateToProfile() },
                 onNavigateToRecents = { onNavigateToRecents() },
                 onNavigateToInput = { onNavigateToInput() },
-                onNavigateToScan = { onNavigateToScan() }
+                onNavigateToScan = { onNavigateToScan() },
+                onLogout = {}
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -89,7 +90,7 @@ fun InputScreen(
                     ) {
                         Checkbox(
                             checked = checkedMap[item] == true,
-                            onCheckedChange = { checked -> vm.setChecked(item, checked) }
+                            onCheckedChange = { checked -> allergenViewModel.setChecked(item, checked) }
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
