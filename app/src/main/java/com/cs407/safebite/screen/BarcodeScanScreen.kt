@@ -1,11 +1,19 @@
-package com.cs407.safebite.screen
-
 import android.Manifest
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.*
+import androidx.annotation.OptIn
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.border
@@ -16,6 +24,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -252,6 +262,7 @@ fun BarcodeScanScreen(
 @Composable
 private fun CameraPreviewWithBarcode(onBarcodeDetected: (String) -> Unit) {
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current // Get context here
 
     AndroidView(
         factory = { ctx ->
@@ -275,7 +286,8 @@ private fun CameraPreviewWithBarcode(onBarcodeDetected: (String) -> Unit) {
                     .apply {
                         setAnalyzer(
                             ContextCompat.getMainExecutor(ctx),
-                            BarcodeAnalyzer(onBarcodeDetected)
+                            // Pass context to the analyzer
+                            BarcodeAnalyzer(context, onBarcodeDetected)
                         )
                     }
 
@@ -296,29 +308,57 @@ private fun CameraPreviewWithBarcode(onBarcodeDetected: (String) -> Unit) {
 }
 
 private class BarcodeAnalyzer(
+    private val context: Context, // Add context to the constructor
     private val onBarcodeDetected: (String) -> Unit
 ) : ImageAnalysis.Analyzer {
     private val scanner = BarcodeScanning.getClient()
     private var lastDetected = ""
 
-    @ExperimentalGetImage
+    @OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image ?: run {
-            imageProxy.close(); return
+            imageProxy.close()
+            return
         }
+        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
 
-        val inputImage = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-        scanner.process(inputImage)
+        scanner.process(image)
             .addOnSuccessListener { barcodes ->
-                for (barcode in barcodes) {
-                    barcode.rawValue?.let { code ->
-                        if (code != lastDetected) {
-                            lastDetected = code
-                            onBarcodeDetected(code)
-                        }
+                if (barcodes.isNotEmpty()) {
+                    val firstBarcodeValue = barcodes[0].rawValue ?: ""
+                    // To avoid rapid-fire detections and vibrations
+                    if (firstBarcodeValue.isNotEmpty() && firstBarcodeValue != lastDetected) {
+                        lastDetected = firstBarcodeValue
+                        onBarcodeDetected(firstBarcodeValue)
+                        // VIBRATION ADDED HERE
+                        triggerVibration()
                     }
                 }
             }
-            .addOnCompleteListener { imageProxy.close() }
+            .addOnFailureListener {
+                // You can add logging here if needed
+            }
+            .addOnCompleteListener {
+                imageProxy.close()
+            }
+    }
+
+    private fun triggerVibration() {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager =
+                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+
+        // Vibrate for 150 milliseconds with default intensity
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(150)
+        }
     }
 }
