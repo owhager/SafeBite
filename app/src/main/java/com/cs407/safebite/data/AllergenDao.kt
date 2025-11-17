@@ -11,9 +11,12 @@ interface AllergenDao {
     @Insert suspend fun insert(allergen: Allergen): Long
     @Update
     suspend fun update(allergen: Allergen)
-    @Query("SELECT * FROM allergens WHERE userId = :userId")
-    suspend fun getAllForUser(userId: Int): List<Allergen>
+    @Query("SELECT * FROM allergens WHERE userUID = :userUID")
+    suspend fun getAllForUser(userUID: String): List<Allergen>
 
-    @Query("DELETE FROM allergens WHERE userId = :userId")
-    suspend fun deleteAllForUser(userId: Int)
+    @Query("DELETE FROM allergens WHERE userUID = :userUID")
+    suspend fun deleteAllForUser(userUID: String)
+
+    @Query("DELETE FROM allergens WHERE userUID = :userUID AND name = :name")
+    suspend fun delete(userUID: String, name: String)  // ← ADD THIS
 }

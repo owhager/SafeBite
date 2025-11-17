@@ -10,15 +10,15 @@ import androidx.room.PrimaryKey
     tableName = "allergens",
     foreignKeys = [ForeignKey(
         entity = User::class,
-        parentColumns = ["userId"],
-        childColumns = ["userId"],
+        parentColumns = ["userUID"],
+        childColumns = ["userUID"],
         onDelete = ForeignKey.CASCADE
     )],
-    indices = [Index("userId")]
+    indices = [Index("userUID")]
 )
 data class Allergen(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val userId: Int,                 // FK → User.userId
+    val userUID: String,                 // FK → User.userUID
     val name: String,
     val isChecked: Boolean = false
 )

@@ -4,17 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -52,11 +55,24 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(
-    allergenViewModel: AllergenViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
     val userState by userViewModel.userState.collectAsState()
+    val isLoading by userViewModel.isLoading.collectAsState()
+    val context = LocalContext.current
+
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+            Text("Loading...", Modifier.padding(top = 16.dp))
+        }
+        return
+    }
+
 
     LaunchedEffect(userState.uid) {
         // if uid is not empty, meaning user has logged in, then check if they have username
@@ -83,6 +99,12 @@ fun AppNavigation(
         }
     }
 
+    val allergenViewModel = remember(userState.uid) {
+        if (userState.uid.isNotEmpty()) {
+            AllergenViewModel(userUID = userState.uid, context = context.applicationContext)
+        } else null
+    }
+
     NavHost(
         navController = navController, startDestination = "profile"
     ) {
@@ -93,19 +115,35 @@ fun AppNavigation(
         }
         composable("askNamePage") {
             val context = LocalContext.current
+            val userState by userViewModel.userState.collectAsState()
 
-            AskNamePage(onSuccess = {updatedUser ->
-                // Update ViewModel with new display name
+            AskNamePage(onSuccess = { updatedUser ->
+                // Step 1: Update display name in Firebase + ViewModel
                 userViewModel.setUser(
                     userState.copy(name = updatedUser.displayName ?: "")
                 )
 
-                // Insert user into Room db
-                userViewModel.insertUserLocally(updatedUser.uid, context)
+                // Step 2: Insert into Room AND wait for the real userId
+                userViewModel.insertUserLocally(
+                    uid = updatedUser.uid,
+                    context = context.applicationContext
+                ) { roomUserId ->
+                    // This callback runs ONLY after Room insert is complete
+                    // and we now have the real userId (1, 2, 3...)
 
-                // Navigate to profile after name is set
-                navController.navigate("profile") {
-                    popUpTo("askNamePage") { inclusive = true }
+                    // Optional: double-confirm state update (usually already done inside ViewModel)
+                    userViewModel.setUser(
+                        userState.copy(
+                            id = roomUserId,
+                            uid = updatedUser.uid,
+                            name = updatedUser.displayName ?: ""
+                        )
+                    )
+
+                    // NOW safe to go to profile — AllergenViewModel will use correct userId
+                    navController.navigate("profile") {
+                        popUpTo("askNamePage") { inclusive = true }
+                    }
                 }
             })
         }
@@ -116,9 +154,9 @@ fun AppNavigation(
                 userState = userState,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToRecents = { navController.navigate("recents") },
-                onNavigateToInput   = { navController.navigate("input_allergies") },
+                onNavigateToInput = { navController.navigate("input_allergies") },
                 onNavigateToProfile = { navController.navigate("profile") },
-                onNavigateToScan    = { navController.navigate("barcode_scan") },
+                onNavigateToScan = { navController.navigate("barcode_scan") },
                 onAddMoreAllergens = { navController.navigate("input_allergies")},
                 onLogout = {userViewModel.logout(navController)},
                 onDelete = {userViewModel.deleteAccount(context, navController)}
@@ -148,6 +186,7 @@ fun AppNavigation(
         composable("input_allergies") {
             InputScreen(
                 allergenViewModel = allergenViewModel,
+                userState = userState,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToRecents = { navController.navigate("recents") },
                 onNavigateToInput   = { navController.navigate("input_allergies") },

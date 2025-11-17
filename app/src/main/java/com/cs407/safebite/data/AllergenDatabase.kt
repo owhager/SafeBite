@@ -6,10 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.cs407.safebite.R
 
-@Database(entities = [User::class], version = 1)
+@Database(entities = [User::class, Allergen::class], version = 2)
 abstract class AllergenDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun deleteDao(): DeleteDao
+    abstract fun allergenDao(): AllergenDao
 
     companion object {
         // Singleton prevents multiple instances of database
@@ -24,7 +25,7 @@ abstract class AllergenDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AllergenDatabase::class.java,
-                    context.getString(R.string.note_database)
+                    "safebite_database"
                 ).build()
                 INSTANCE = instance
                 instance

@@ -2,6 +2,8 @@ package com.cs407.safebite.screen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,12 +15,11 @@ import androidx.compose.ui.unit.sp
 import com.cs407.safebite.component.UnifiedTopBar
 import com.cs407.safebite.data.UserState
 import com.cs407.safebite.viewmodel.AllergenViewModel
-import com.cs407.safebite.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    allergenViewModel: AllergenViewModel,
+    allergenViewModel: AllergenViewModel?,
     userState: UserState,
     onNavigateBack: () -> Unit,
     onNavigateToRecents: () -> Unit,
@@ -29,12 +30,33 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val checkedItems = allergenViewModel.checkedItems()
+    val masterAllergens = listOf(
+        "Peanut", "Milk", "Egg", "Fish", "Gluten",
+        "Lactose", "Nuts", "Sesame", "Shellfish", "Soy"
+    )
+
+    // Observe checked allergens from ViewModel
+//    val checkedItems by remember { mutableStateOf(allergenViewModel?.checked) }
+//    print(checkedItems)
+
+//    val checkedItems = allergenViewModel.checkedItems()
+
+    val checkedItems = allergenViewModel?.checked ?: emptyList()
+
+    // In both ProfileScreen and InputScreen
+    if (userState.uid.isEmpty() || allergenViewModel == null) {
+        // Show loading or message
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+            Text("Loading...", Modifier.padding(16.dp))
+        }
+        return
+    }
 
     Scaffold(
         topBar = {
             UnifiedTopBar(
-                title = "User Allergens",
+                title = "Profile",
                 onNavigateBack = { onNavigateBack() },
                 onNavigateToProfile = { onNavigateToProfile() },
                 onNavigateToRecents = { onNavigateToRecents() },
@@ -64,21 +86,32 @@ fun ProfileScreen(
                 modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
             )
 
-            checkedItems.forEach { item ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = true,
-                        onCheckedChange = { checked -> allergenViewModel.setChecked(item, checked) }
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = item,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+            // Show only checked allergens
+            if (checkedItems?.isEmpty() ?: false) {
+                Text(
+                    text = "No allergens selected yet.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                checkedItems?.forEach { item ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = true,
+                            onCheckedChange = { allergenViewModel?.toggle(item) }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = item,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 }
             }
 
@@ -88,16 +121,21 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { onAddMoreAllergens() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Checkbox(
-                    checked = false,
-                    onCheckedChange = { onAddMoreAllergens() }
-                )
+
                 Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "Add more allergens",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                TextButton(
+                    onClick = { onAddMoreAllergens() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add more allergens")
+                }
+
+
             }
 
             Button(

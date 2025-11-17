@@ -19,12 +19,18 @@ import kotlinx.coroutines.launch
 class UserViewModel : ViewModel() {
     // Private mutable state (only ViewModel can modify)
     private val _userState = MutableStateFlow(UserState())
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading = _isLoading.asStateFlow()
 
     // Firebase auth instance
     private val auth: FirebaseAuth = Firebase.auth
 
     // Public read-only state
     val userState = _userState.asStateFlow()
+
+    fun setLoading(value: Boolean) {
+        _isLoading.value = value
+    }
 
     init {
         // Listen for authentication state changes
@@ -37,6 +43,7 @@ class UserViewModel : ViewModel() {
             else {
                 setUser(UserState(name = user.displayName ?: "", uid = user.uid))
             }
+            setLoading(false)
         }
     }
 
@@ -45,17 +52,28 @@ class UserViewModel : ViewModel() {
         _userState.update { state }
     }
 
-    // Insert user locally
-    fun insertUserLocally(uid: String, context: Context) {
+    fun insertUserLocally(uid: String, context: Context, onComplete: (Int) -> Unit = {}) {
         viewModelScope.launch {
             val userDao = AllergenDatabase.getDatabase(context).userDao()
-            val existingUser = userDao.getByUID(uid)
-            if (existingUser == null) {
-                userDao.insert(User(userUID = uid))
+            var localUser = userDao.getByUID(uid)
+            if (localUser == null) {
+                userDao.insert(User(userUID = uid))  // ← this returns the real ID
+                localUser = userDao.getByUID(uid)
             }
+            // NOW UPDATE THE STATE WITH THE REAL ID
+            if (localUser != null) {
+                _userState.update {
+                    it.copy(
+                        id = localUser.userId,
+                        uid = uid,
+                        name = auth.currentUser?.displayName ?: it.name
+                    )
+                }
+                onComplete(localUser.userId)
+            }
+
         }
     }
-
     // Delete user locally
     fun deleteAccount(context: Context, navController: NavHostController) {
         viewModelScope.launch {
@@ -93,6 +111,8 @@ class UserViewModel : ViewModel() {
 
     // Logout
     fun logout(navController: NavHostController) {
+        setLoading(true)
+
         // Sign out from Firebase
         auth.signOut()
 
@@ -103,6 +123,8 @@ class UserViewModel : ViewModel() {
         navController.navigate("login") {
             popUpTo(0) { inclusive = true }
         }
+
+        setLoading(false)
     }
 
 
