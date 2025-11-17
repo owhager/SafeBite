@@ -40,9 +40,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import com.cs407.safebite.component.UnifiedTopBar
+import com.cs407.safebite.viewmodel.BarcodeLookupViewModel
 
 @Composable
 fun BarcodeScanScreen(
@@ -52,11 +55,16 @@ fun BarcodeScanScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToScan: () -> Unit,
     onNavigateToResults: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    barcodeModel: BarcodeLookupViewModel = viewModel()
 ) {
+    val barcodeState by barcodeModel.foodState.collectAsStateWithLifecycle()
+
     var showConfirm by remember { mutableStateOf(false) }
     var showManual by remember { mutableStateOf(false) }
     var barcode by remember { mutableStateOf("") }
+    var foodName by remember { mutableStateOf("") }
+    var brandName by remember { mutableStateOf("") }
     var inputError by remember { mutableStateOf(false) }
 
     var hasPermission by remember { mutableStateOf(false) }
@@ -103,6 +111,7 @@ fun BarcodeScanScreen(
                     onBarcodeDetected = { code ->
                         if (!showConfirm) {
                             barcode = code
+                            barcodeModel.getFoodData(code)
                             showConfirm = true
                         }
                     }
@@ -118,6 +127,7 @@ fun BarcodeScanScreen(
         }
 
         if (showConfirm) {
+            val data = barcodeState.foodData
             Dialog(onDismissRequest = { showConfirm = false }) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
@@ -147,11 +157,21 @@ fun BarcodeScanScreen(
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = barcode.ifEmpty { "No barcode detected" },
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            if (barcodeState.isLoading) {
+                                Text(
+                                    text = "Loading...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            } else {
+                                data?.food?.food_name?.let {
+                                    Text(
+                                        text = data.food.brand_name + it,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
                         }
 
                         Spacer(Modifier.height(16.dp))
