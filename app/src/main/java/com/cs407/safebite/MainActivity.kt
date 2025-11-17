@@ -1,6 +1,6 @@
 package com.cs407.safebite
 
-import BarcodeScanScreen
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,6 +29,7 @@ import com.cs407.safebite.ui.theme.SafeBiteTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.cs407.safebite.screen.AskNamePage
+import com.cs407.safebite.screen.BarcodeScanScreen
 import com.cs407.safebite.screen.LoginPage
 import com.cs407.safebite.screen.ResultScreen
 import com.cs407.safebite.viewmodel.AllergenViewModel
