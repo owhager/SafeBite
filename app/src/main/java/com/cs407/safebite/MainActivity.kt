@@ -1,5 +1,6 @@
 package com.cs407.safebite
 
+import BarcodeScanScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.cs407.safebite.screen.BarcodeScanScreen
 import com.cs407.safebite.screen.InputScreen
 import com.cs407.safebite.screen.ProfileScreen
 import com.cs407.safebite.screen.RecentsScreen
