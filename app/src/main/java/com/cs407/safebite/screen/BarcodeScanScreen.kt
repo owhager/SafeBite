@@ -1,3 +1,5 @@
+package com.cs407.safebite.screen
+
 import android.Manifest
 import android.content.Context
 import android.os.Build
