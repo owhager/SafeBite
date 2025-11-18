@@ -26,13 +26,17 @@ data class FoodData(
 )
 
 data class FoodAttributes(
-    val allergens: List<AllergenData>?
+    val allergens: AllergenData
 )
 
 data class AllergenData(
+    val allergen: List<Allergen>?
+)
+
+data class Allergen(
     val id: Long?, // ID Number for Allergen
     val name: String?, // Allergen Name
-    val value: Int? // 0 if
+    val value: Int? // 1 if Allergen is present, 0 if not, -1 if unknown
 )
 
 data class foodState(
