@@ -14,6 +14,10 @@ import kotlinx.coroutines.launch
 import retrofit2.Response
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Header
+import android.content.Context
+import com.cs407.safebite.data.AllergenDatabase
+import com.cs407.safebite.data.RecentScan
+import com.cs407.safebite.data.RecentScanDao
 
 data class FoodApiResponse(
     val food: FoodData?
@@ -49,8 +53,7 @@ data class foodState(
 data class RecentItem(
     val barcode: String,
     val foodName: String,
-    val brandName: String,
-    val foodData: FoodApiResponse
+    val brandName: String
 )
 
 class BarcodeLookupViewModel : ViewModel() {
@@ -59,10 +62,37 @@ class BarcodeLookupViewModel : ViewModel() {
         MutableStateFlow(foodState())
     val foodState = _foodState.asStateFlow()
 
-    // In-memory list of recently looked-up items (most recent first).
+    // ---- RECENTS (in-memory list + DB backing) ----
     private val _recentItems: MutableStateFlow<List<RecentItem>> =
         MutableStateFlow(emptyList())
     val recentItems = _recentItems.asStateFlow()
+
+    private var userUID: String? = null
+    private var recentDao: RecentScanDao? = null
+
+    /**
+     * Must be called once we know the logged-in user's UID.
+     * This sets up the DAO and loads existing recents from Room.
+     */
+    fun initialize(context: Context, userUID: String) {
+        if (this.userUID == userUID && recentDao != null) return
+
+        this.userUID = userUID
+        this.recentDao = AllergenDatabase.getDatabase(context).recentScanDao()
+
+        // Load recents from DB
+        viewModelScope.launch {
+            val dao = recentDao ?: return@launch
+            val rows = dao.getAllForUser(userUID)
+            _recentItems.value = rows.map { row ->
+                RecentItem(
+                    barcode = row.barcode,
+                    foodName = row.foodName,
+                    brandName = row.brandName
+                )
+            }
+        }
+    }
 
     fun getFoodData(barcode: String) {
         viewModelScope.launch {
@@ -83,15 +113,30 @@ class BarcodeLookupViewModel : ViewModel() {
                     val food = body.food
                     val name = food.food_name ?: "Unknown item"
                     val brand = food.brand_name ?: ""
+
                     val recent = RecentItem(
                         barcode = barcode,
                         foodName = name,
-                        brandName = brand,
-                        foodData = body
+                        brandName = brand
                     )
+
+                    // Update in-memory recents
                     _recentItems.update { current ->
-                        // Prepend new item, remove older duplicate of same barcode.
                         listOf(recent) + current.filterNot { it.barcode == barcode }
+                    }
+
+                    // Also save to Room for persistence
+                    val uid = userUID
+                    val dao = recentDao
+                    if (uid != null && dao != null) {
+                        dao.insert(
+                            RecentScan(
+                                userUID = uid,
+                                barcode = barcode,
+                                foodName = name,
+                                brandName = brand
+                            )
+                        )
                     }
                 }
             } catch (e: Exception) {
@@ -120,7 +165,6 @@ class BarcodeLookupViewModel : ViewModel() {
     fun selectRecentItem(item: RecentItem) {
         _foodState.update {
             it.copy(
-                foodData = item.foodData,
                 isLoading = false,
                 error = null
             )
@@ -128,8 +172,18 @@ class BarcodeLookupViewModel : ViewModel() {
     }
 
     fun removeRecentItem(item: RecentItem) {
+        // Update UI immediately
         _recentItems.update { current ->
             current.filterNot { it.barcode == item.barcode }
+        }
+
+        // Reflect change in Room
+        val uid = userUID
+        val dao = recentDao
+        if (uid != null && dao != null) {
+            viewModelScope.launch {
+                dao.deleteByBarcode(uid, item.barcode)
+            }
         }
     }
 }

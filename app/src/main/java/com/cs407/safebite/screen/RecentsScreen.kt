@@ -94,8 +94,8 @@ fun RecentsScreen(
                         RecentProductCard(
                             item = item,
                             onClick = {
-                                // Use the cached data and go straight to results
-                                barcodeModel.selectRecentItem(item)
+                                // Re-fetch details using barcode only (no scanning UI)
+                                barcodeModel.getFoodData(item.barcode)
                                 onNavigateToResults()
                             },
                             onDelete = {

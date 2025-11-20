@@ -110,6 +110,12 @@ fun AppNavigation(
     // Shared barcode lookup ViewModel for scan + results screens
     val barcodeModel: BarcodeLookupViewModel = viewModel()
 
+    LaunchedEffect(userState.uid) {
+        if (userState.uid.isNotEmpty()) {
+            barcodeModel.initialize(context.applicationContext, userState.uid)
+        }
+    }
+
     NavHost(
         navController = navController, startDestination = "profile"
     ) {
