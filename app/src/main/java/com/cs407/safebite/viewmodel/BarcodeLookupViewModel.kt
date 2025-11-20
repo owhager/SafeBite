@@ -126,6 +126,12 @@ class BarcodeLookupViewModel : ViewModel() {
             )
         }
     }
+
+    fun removeRecentItem(item: RecentItem) {
+        _recentItems.update { current ->
+            current.filterNot { it.barcode == item.barcode }
+        }
+    }
 }
 
 interface FoodApiService {
