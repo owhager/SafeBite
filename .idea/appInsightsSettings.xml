@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.cs407.safebite" />
+                  <option name="mobileSdkAppId" value="1:855302195423:android:a4f6fca1f5862040df016a" />
+                  <option name="projectId" value="safebite-c4b71" />
+                  <option name="projectNumber" value="855302195423" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
