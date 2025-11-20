@@ -34,9 +34,9 @@ data class AllergenData(
 )
 
 data class Allergen(
-    val id: Long?, // ID Number for Allergen
+    val id: Long?,   // ID Number for Allergen
     val name: String?, // Allergen Name
-    val value: Int? // 1 if Allergen is present, 0 if not, -1 if unknown
+    val value: Int?   // 1 if Allergen is present, 0 if not, -1 if unknown
 )
 
 data class foodState(
@@ -45,14 +45,29 @@ data class foodState(
     val error: String? = null
 )
 
+// One item in the Recents list.
+data class RecentItem(
+    val barcode: String,
+    val foodName: String,
+    val brandName: String,
+    val foodData: FoodApiResponse
+)
+
 class BarcodeLookupViewModel : ViewModel() {
-    private val _foodState: MutableStateFlow<foodState> = MutableStateFlow<foodState>(foodState())
+
+    private val _foodState: MutableStateFlow<foodState> =
+        MutableStateFlow(foodState())
     val foodState = _foodState.asStateFlow()
+
+    // In-memory list of recently looked-up items (most recent first).
+    private val _recentItems: MutableStateFlow<List<RecentItem>> =
+        MutableStateFlow(emptyList())
+    val recentItems = _recentItems.asStateFlow()
+
     fun getFoodData(barcode: String) {
-        //if (_weatherState.value.isLoading) return
         viewModelScope.launch {
             Log.d("FatSecretAPI", "Fetching food data for $barcode")
-            _foodState.update {it.copy(isLoading = true, error = null)}
+            _foodState.update { it.copy(isLoading = true, error = null) }
             try {
                 val response = RetrofitInstance.foodApi.getFoodData(
                     barcode = barcode,
@@ -60,13 +75,55 @@ class BarcodeLookupViewModel : ViewModel() {
                 Log.d("FatSecretAPI", "HTTP ${response.code()}")
                 val body = response.body()
                 Log.d("FatSecretAPI", "Body: $body")
-                _foodState.update { it.copy(isLoading = false, foodData = body)}
-            } catch(e: Exception) {
-                Log.e("FatSecretAPI", "Error fetching food data: ${e.localizedMessage}", e)
-                _foodState.update {it.copy(isLoading = false, error = "Failed to retrieve food data: ${e.message}")}
+
+                _foodState.update { it.copy(isLoading = false, foodData = body) }
+
+                // If we got valid food data, add/update this entry in Recents.
+                if (body != null && body.food != null) {
+                    val food = body.food
+                    val name = food.food_name ?: "Unknown item"
+                    val brand = food.brand_name ?: ""
+                    val recent = RecentItem(
+                        barcode = barcode,
+                        foodName = name,
+                        brandName = brand,
+                        foodData = body
+                    )
+                    _recentItems.update { current ->
+                        // Prepend new item, remove older duplicate of same barcode.
+                        listOf(recent) + current.filterNot { it.barcode == barcode }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "FatSecretAPI",
+                    "Error fetching food data: ${e.localizedMessage}",
+                    e
+                )
+                _foodState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to retrieve food data: ${e.message}"
+                    )
+                }
             } finally {
                 Log.d("FatSecretAPI", "getFoodData() finished")
             }
+        }
+    }
+
+    /**
+     * Called from the Recents screen when a user taps a card.
+     * We just push that food into foodState so ResultScreen can
+     * display it without re-scanning.
+     */
+    fun selectRecentItem(item: RecentItem) {
+        _foodState.update {
+            it.copy(
+                foodData = item.foodData,
+                isLoading = false,
+                error = null
+            )
         }
     }
 }
@@ -74,7 +131,7 @@ class BarcodeLookupViewModel : ViewModel() {
 interface FoodApiService {
     @GET("food/barcode/find-by-id/v2")
     suspend fun getFoodData(
-        @Header("Authorization") auth: String = "Bearer ", //TODO: Insert api token
+        @Header("Authorization") auth: String = "Bearer ", // TODO: Insert api token
         @Query("barcode") barcode: String,
         @Query("include_food_attributes") include: String = "true",
         @Query("format") format: String = "json",

@@ -181,12 +181,14 @@ fun AppNavigation(
         }
         composable("recents") {
             RecentsScreen(
+                barcodeModel = barcodeModel,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToRecents = { navController.navigate("recents") },
                 onNavigateToInput = { navController.navigate("input_allergies") },
                 onNavigateToProfile = { navController.navigate("profile") },
                 onNavigateToScan = { navController.navigate("barcode_scan") },
-                onLogout = {userViewModel.logout(navController)}
+                onNavigateToResults = { navController.navigate("results") },
+                onLogout = { userViewModel.logout(navController) }
             )
         }
         composable("input_allergies") {
