@@ -1,20 +1,31 @@
 package com.cs407.safebite.screen
 
-import com.cs407.safebite.component.UnifiedTopBar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cs407.safebite.component.UnifiedTopBar
+import com.cs407.safebite.viewmodel.AllergenViewModel
+import com.cs407.safebite.viewmodel.BarcodeLookupViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultScreen(
+    allergenViewModel: AllergenViewModel?,
+    barcodeModel: BarcodeLookupViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToRecents: () -> Unit,
     onNavigateToInput: () -> Unit,
@@ -22,21 +33,52 @@ fun ResultScreen(
     onNavigateToScan: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val productName = "Peanut Butter"
-    val brandName = "Natural Food Co."
-    val allergens = listOf("Peanuts", "Treenuts")
-    val containsAllergen = true
+    // Observe the latest food data from the shared barcode view model
+    val foodState by barcodeModel.foodState.collectAsStateWithLifecycle()
+
+    val food = foodState.foodData?.food
+    val productName = food?.food_name ?: "Unknown item"
+    val brandName = food?.brand_name ?: ""
+
+    // All allergens returned by the API that are marked as "present"
+    val apiAllergens = food
+        ?.food_attributes
+        ?.allergens
+        ?.allergen
+        ?.filter { it.value == 1 && !it.name.isNullOrBlank() }
+        ?.map { it.name!!.trim() }
+        ?: emptyList()
+
+    // User-selected allergens from our local DB (InputScreen)
+    val userAllergens = allergenViewModel?.checked ?: emptyList()
+
+    data class DisplayAllergen(
+        val name: String,
+        val isUserAllergen: Boolean
+    )
+
+    // Mark which API allergens match the user's allergen list (case-insensitive / contains)
+    val displayAllergens = apiAllergens.map { apiName ->
+        val lower = apiName.lowercase()
+        val matchesUser = userAllergens.any { user ->
+            val u = user.lowercase()
+            lower.contains(u) || u.contains(lower)
+        }
+        DisplayAllergen(apiName, matchesUser)
+    }
+
+    val containsUserAllergen = displayAllergens.any { it.isUserAllergen }
 
     Scaffold(
         topBar = {
             UnifiedTopBar(
                 title = "Results",
-                onNavigateBack = { onNavigateBack() },
-                onNavigateToProfile = { onNavigateToProfile() },
-                onNavigateToRecents = { onNavigateToRecents() },
-                onNavigateToInput = { onNavigateToInput() },
-                onNavigateToScan = { onNavigateToScan() },
-                onLogout = {onLogout()}
+                onNavigateBack = onNavigateBack,
+                onNavigateToProfile = onNavigateToProfile,
+                onNavigateToRecents = onNavigateToRecents,
+                onNavigateToInput = onNavigateToInput,
+                onNavigateToScan = onNavigateToScan,
+                onLogout = onLogout
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -48,84 +90,155 @@ fun ResultScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (containsAllergen) {
+            // Danger banner if this item appears unsafe for the current user
+            if (containsUserAllergen) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 12.dp)
                         .height(40.dp)
-                        .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(20.dp))
-                        .border(2.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(20.dp)),
+                        .background(
+                            MaterialTheme.colorScheme.errorContainer,
+                            RoundedCornerShape(20.dp)
+                        )
+                        .border(
+                            2.dp,
+                            MaterialTheme.colorScheme.error,
+                            RoundedCornerShape(20.dp)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Contains Allergen!",
+                        text = "Contains one of your allergens",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                 }
             }
 
+            // Product card
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(24.dp))
+                    .border(
+                        2.dp,
+                        MaterialTheme.colorScheme.onSurface,
+                        RoundedCornerShape(24.dp)
+                    )
                     .padding(vertical = 14.dp, horizontal = 18.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         text = productName,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(
-                        text = brandName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // Allergens section
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(2.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(16.dp))
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Allergens",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(Modifier.height(8.dp))
-
-                allergens.forEach { a ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .background(MaterialTheme.colorScheme.error, RoundedCornerShape(3.dp))
-                        )
-                        Spacer(Modifier.width(8.dp))
+                    if (brandName.isNotBlank()) {
                         Text(
-                            text = a,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = if (a.contains("Peanut", ignoreCase = true)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                            text = brandName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Allergens section
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        2.dp,
+                        MaterialTheme.colorScheme.onSurface,
+                        RoundedCornerShape(16.dp)
+                    )
+                    .padding(16.dp)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Allergens",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    when {
+                        foodState.isLoading -> {
+                            Text(
+                                text = "Loading allergen information…",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        foodState.error != null -> {
+                            Text(
+                                text = foodState.error
+                                    ?: "Failed to load allergen information.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        apiAllergens.isEmpty() -> {
+                            Text(
+                                text = "No allergen information available for this item.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        else -> {
+                            displayAllergens.forEach { item ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                ) {
+                                    // Small pill indicating whether this allergen matches the user
+                                    val pillColor =
+                                        if (item.isUserAllergen)
+                                            MaterialTheme.colorScheme.error
+                                        else
+                                            MaterialTheme.colorScheme.primary
+
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .background(
+                                                pillColor,
+                                                RoundedCornerShape(4.dp)
+                                            )
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = item.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color =
+                                            if (item.isUserAllergen)
+                                                MaterialTheme.colorScheme.error
+                                            else
+                                                MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = { onNavigateToScan() },
+                onClick = onNavigateToScan,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

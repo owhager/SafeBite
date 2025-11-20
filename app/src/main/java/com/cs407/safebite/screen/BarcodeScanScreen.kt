@@ -56,7 +56,7 @@ fun BarcodeScanScreen(
     onNavigateToScan: () -> Unit,
     onNavigateToResults: () -> Unit,
     onLogout: () -> Unit,
-    barcodeModel: BarcodeLookupViewModel = viewModel()
+    barcodeModel: BarcodeLookupViewModel
 ) {
     val barcodeState by barcodeModel.foodState.collectAsStateWithLifecycle()
 

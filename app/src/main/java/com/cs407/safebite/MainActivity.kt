@@ -37,6 +37,7 @@ import com.cs407.safebite.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.cs407.safebite.viewmodel.BarcodeLookupViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -106,6 +107,9 @@ fun AppNavigation(
         } else null
     }
 
+    // Shared barcode lookup ViewModel for scan + results screens
+    val barcodeModel: BarcodeLookupViewModel = viewModel()
+
     NavHost(
         navController = navController, startDestination = "profile"
     ) {
@@ -171,7 +175,8 @@ fun AppNavigation(
                 onNavigateToProfile = { navController.navigate("profile") },
                 onNavigateToScan    = { navController.navigate("barcode_scan") },
                 onNavigateToResults = { navController.navigate("results") },
-                onLogout = {userViewModel.logout(navController)}
+                onLogout = {userViewModel.logout(navController)},
+                barcodeModel = barcodeModel
             )
         }
         composable("recents") {
@@ -197,6 +202,8 @@ fun AppNavigation(
         }
         composable("results") {
             ResultScreen(
+                allergenViewModel = allergenViewModel,
+                barcodeModel = barcodeModel,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToRecents = { navController.navigate("recents") },
                 onNavigateToInput = { navController.navigate("input_allergies") },
