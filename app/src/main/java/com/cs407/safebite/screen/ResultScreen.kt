@@ -235,6 +235,156 @@ fun ResultScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Other Potential Allergens section (allergens with value == 0)
+            val otherAllergens = food
+                ?.food_attributes
+                ?.allergens
+                ?.allergen
+                ?.filter { it.value == 0 && !it.name.isNullOrBlank() }
+                ?.map { it.name!!.trim() }
+                ?: emptyList()
+
+            if (otherAllergens.isNotEmpty() || foodState.isLoading || foodState.error != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            2.dp,
+                            MaterialTheme.colorScheme.onSurface,
+                            RoundedCornerShape(16.dp)
+                        )
+                        .padding(16.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Other Potential Allergens",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        when {
+                            foodState.isLoading -> {
+                                Text(
+                                    text = "Loading allergen information…",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            foodState.error != null -> {
+                                Text(
+                                    text = foodState.error
+                                        ?: "Failed to load allergen information.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            otherAllergens.isEmpty() -> {
+                                Text(
+                                    text = "No other potential allergens listed for this item.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            else -> {
+                                otherAllergens.forEach { allergen ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "• $allergen",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Food Attributes section (preferences)
+            val preferences = food
+                ?.food_attributes
+                ?.preferences
+                ?.preference
+                ?.filter { it.value == 1 && !it.name.isNullOrBlank() }
+                ?.map { it.name!!.trim() }
+                ?: emptyList()
+
+            if (preferences.isNotEmpty() || foodState.isLoading || foodState.error != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            2.dp,
+                            MaterialTheme.colorScheme.onSurface,
+                            RoundedCornerShape(16.dp)
+                        )
+                        .padding(16.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Food Attributes",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        when {
+                            foodState.isLoading -> {
+                                Text(
+                                    text = "Loading food attributes…",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            foodState.error != null -> {
+                                Text(
+                                    text = foodState.error
+                                        ?: "Failed to load food attributes.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            preferences.isEmpty() -> {
+                                Text(
+                                    text = "No food attributes available for this item.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            else -> {
+                                preferences.forEach { preference ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "• $preference",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             Button(

@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [RecentScan::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class RecentScanDatabase : RoomDatabase() {
@@ -24,7 +24,9 @@ abstract class RecentScanDatabase : RoomDatabase() {
                     context.applicationContext,
                     RecentScanDatabase::class.java,
                     "recents_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

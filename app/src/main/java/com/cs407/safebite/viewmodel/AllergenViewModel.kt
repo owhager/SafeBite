@@ -15,7 +15,7 @@ class AllergenViewModel(
 ) : ViewModel() {
 
     // ---- MASTER LIST (never changes) ----
-    private val master = listOf(
+    val master = listOf(
         "Peanut", "Milk", "Egg", "Fish", "Gluten",
         "Lactose", "Nuts", "Sesame", "Shellfish", "Soy"
     )
@@ -24,6 +24,10 @@ class AllergenViewModel(
     private val dao = AllergenDatabase.getDatabase(context).allergenDao()
     private val _checked = mutableStateListOf<String>()
     val checked: List<String> = _checked
+
+    // Get all custom allergens (not in master list)
+    val customAllergens: List<String>
+        get() = _checked.filter { it !in master }
 
     init { loadChecked() }
 
@@ -35,11 +39,9 @@ class AllergenViewModel(
         }
     }
 
-    /** Called from UI when a checkbox toggles */
+    /** Called from UI when a checkbox toggles (works for both master and custom allergens) */
     fun toggle(name: String) {
         viewModelScope.launch {
-            if (name !in master) return@launch
-
             if (name in _checked) {
                 // Uncheck: delete row
                 dao.delete(userUID, name)
@@ -48,6 +50,29 @@ class AllergenViewModel(
                 // Check: insert row
                 dao.insert(Allergen(userUID = userUID, name = name, isChecked = true))
                 _checked.add(name)
+            }
+        }
+    }
+
+    /** Add a custom allergen */
+    fun addCustomAllergen(name: String): Boolean {
+        val trimmedName = name.trim()
+        if (trimmedName.isEmpty() || trimmedName in _checked) {
+            return false
+        }
+        viewModelScope.launch {
+            dao.insert(Allergen(userUID = userUID, name = trimmedName, isChecked = true))
+            _checked.add(trimmedName)
+        }
+        return true
+    }
+
+    /** Remove a custom allergen */
+    fun removeCustomAllergen(name: String) {
+        if (name !in master && name in _checked) {
+            viewModelScope.launch {
+                dao.delete(userUID, name)
+                _checked.remove(name)
             }
         }
     }

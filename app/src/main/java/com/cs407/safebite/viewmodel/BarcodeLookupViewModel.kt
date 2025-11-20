@@ -31,7 +31,18 @@ data class FoodData(
 )
 
 data class FoodAttributes(
-    val allergens: AllergenData
+    val allergens: AllergenData?,
+    val preferences: PreferencesData? = null
+)
+
+data class PreferencesData(
+    val preference: List<Preference>?
+)
+
+data class Preference(
+    val id: Long?,
+    val name: String?,
+    val value: Int?  // 1 if preference applies, 0 if not
 )
 
 data class AllergenData(
@@ -215,7 +226,7 @@ class BarcodeLookupViewModel : ViewModel() {
 interface FoodApiService {
     @GET("food/barcode/find-by-id/v2")
     suspend fun getFoodData(
-        @Header("Authorization") auth: String = "Bearer ", // TODO: Insert api token
+        @Header("Authorization") auth: String = "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk0Q0NGMUU4RTI4RUM3RkM4QTc2RTcyNTM4M0E4RjM0OUU3MUUzRjAiLCJ0eXAiOiJhdCtqd3QiLCJ4NXQiOiJsTXp4Nk9LT3hfeUtkdWNsT0RxUE5KNXg0X0EifQ.eyJuYmYiOjE3NjM2MTM4MDgsImV4cCI6MTc2MzcwMDIwOCwiaXNzIjoiaHR0cHM6Ly9vYXV0aC5mYXRzZWNyZXQuY29tIiwiYXVkIjoiYmFyY29kZSIsImNsaWVudF9pZCI6ImE1MTEwODg4ZWFhNzQ3NjA5MGRiY2ZiZDViNzYwY2FhIiwic2NvcGUiOlsiYmFyY29kZSJdfQ.h0wBS3QYyT9hPTw6lh1cgaDHn7oA05hlxEa8F5fmyT-WTO3I_09hSFwGa64d1zDrv1EINbyScYmthSIXklSZFaOyAE3eDRM7nEz0NNLYcLGomC_3ZJm000755LhtqyrmtVciYuEWMDcktujo1ep0bS_p0lfcZJ5g5MTcWjHEtuWNarO7LOZAisa4U5HhDKQkQQWI7iSAdZ9py_WIvKohC8ip87RqdyhgAStzOcBIGIdKe3soqmLaKVK5ca12x2xpcUt8ulPtj9wln5ToyyaSUWnqchUNeetXIgqBiw_WSnKJ29WU1SKNZygV17SRM5EOng0sd5lygWN8WSozyojteVGtYsD1sUZ9nI03bandivW_E-UNklKQs6tQ-x4Em0YCG2MnkFSveT8u7jvjbEECI_v6Yt2CI4CNL-mwxzTeNiQifVNPEn_yhdmQtoeNDlhhYRPRfrFidede-AZJ2hfFTp7MJWf7J1w-t0ikjhGg6gLBTC71hnT4vdCADeO910Rk0GreBagmTP6COxziDK9Q46d4zSlpA-qz2VVWVlX748WoF_296fR4POP6BVUjkbGcn9H2F_iDDh9w4HVnSeYQTEqOHFgmUSRlqrKXP_RW7H5UoSaBTYeieKnGpnmPXDu22pjvHG7AxiZzWqq3BPnRAbDHcziEZxL9xCjigs1yqfw",
         @Query("barcode") barcode: String,
         @Query("include_food_attributes") include: String = "true",
         @Query("format") format: String = "json",
