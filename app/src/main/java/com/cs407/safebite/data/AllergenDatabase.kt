@@ -8,13 +8,12 @@ import com.cs407.safebite.R
 
 @Database(
     entities = [User::class, Allergen::class, RecentScan::class],
-    version = 3
+    version = 2
 )
 abstract class AllergenDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun deleteDao(): DeleteDao
     abstract fun allergenDao(): AllergenDao
-    abstract fun recentScanDao(): RecentScanDao
 
     companion object {
         // Singleton prevents multiple instances of database

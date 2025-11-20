@@ -18,6 +18,7 @@ import android.content.Context
 import com.cs407.safebite.data.AllergenDatabase
 import com.cs407.safebite.data.RecentScan
 import com.cs407.safebite.data.RecentScanDao
+import com.cs407.safebite.data.RecentScanDatabase
 
 data class FoodApiResponse(
     val food: FoodData?
@@ -75,21 +76,28 @@ class BarcodeLookupViewModel : ViewModel() {
      * This sets up the DAO and loads existing recents from Room.
      */
     fun initialize(context: Context, userUID: String) {
+        // Avoid re-initializing for the same user
         if (this.userUID == userUID && recentDao != null) return
 
         this.userUID = userUID
-        this.recentDao = AllergenDatabase.getDatabase(context).recentScanDao()
+        this.recentDao = RecentScanDatabase
+            .getDatabase(context)
+            .recentScanDao()
 
-        // Load recents from DB
+        // Load existing recents from DB
         viewModelScope.launch {
-            val dao = recentDao ?: return@launch
-            val rows = dao.getAllForUser(userUID)
-            _recentItems.value = rows.map { row ->
-                RecentItem(
-                    barcode = row.barcode,
-                    foodName = row.foodName,
-                    brandName = row.brandName
-                )
+            try {
+                val dao = recentDao ?: return@launch
+                val rows = dao.getAllForUser(userUID)
+                _recentItems.value = rows.map { row ->
+                    RecentItem(
+                        barcode = row.barcode,
+                        foodName = row.foodName,
+                        brandName = row.brandName
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("Recents", "Failed to load recents: ${e.localizedMessage}", e)
             }
         }
     }
@@ -129,14 +137,22 @@ class BarcodeLookupViewModel : ViewModel() {
                     val uid = userUID
                     val dao = recentDao
                     if (uid != null && dao != null) {
-                        dao.insert(
-                            RecentScan(
-                                userUID = uid,
-                                barcode = barcode,
-                                foodName = name,
-                                brandName = brand
+                        try {
+                            dao.insert(
+                                RecentScan(
+                                    userUID = uid,
+                                    barcode = barcode,
+                                    foodName = name,
+                                    brandName = brand
+                                )
                             )
-                        )
+                        } catch (e: Exception) {
+                            Log.e(
+                                "Recents",
+                                "Failed to insert recent scan: ${e.localizedMessage}",
+                                e
+                            )
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -177,12 +193,20 @@ class BarcodeLookupViewModel : ViewModel() {
             current.filterNot { it.barcode == item.barcode }
         }
 
-        // Reflect change in Room
+        // Remove from Recents DB if possible
         val uid = userUID
         val dao = recentDao
         if (uid != null && dao != null) {
             viewModelScope.launch {
-                dao.deleteByBarcode(uid, item.barcode)
+                try {
+                    dao.deleteByBarcode(uid, item.barcode)
+                } catch (e: Exception) {
+                    Log.e(
+                        "Recents",
+                        "Failed to delete recent scan: ${e.localizedMessage}",
+                        e
+                    )
+                }
             }
         }
     }
