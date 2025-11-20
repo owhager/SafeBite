@@ -47,6 +47,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.cs407.safebite.component.UnifiedTopBar
 import com.cs407.safebite.viewmodel.BarcodeLookupViewModel
 
+// testing if contributor problem is fixed
 @Composable
 fun BarcodeScanScreen(
     onNavigateBack: () -> Unit,
