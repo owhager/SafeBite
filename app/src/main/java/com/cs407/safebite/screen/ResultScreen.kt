@@ -40,8 +40,8 @@ fun ResultScreen(
     val productName = food?.food_name ?: "Unknown item"
     val brandName = food?.brand_name ?: ""
 
-    // All allergens returned by the API that are marked as "present"
-    val apiAllergens = food
+    // All allergens that ARE present in the product (value == 1)
+    val presentAllergens = food
         ?.food_attributes
         ?.allergens
         ?.allergen
@@ -57,14 +57,14 @@ fun ResultScreen(
         val isUserAllergen: Boolean
     )
 
-    // Mark which API allergens match the user's allergen list (case-insensitive / contains)
-    val displayAllergens = apiAllergens.map { apiName ->
-        val lower = apiName.lowercase()
+    // Mark which present allergens match the user's allergen list (case-insensitive / contains)
+    val displayAllergens = presentAllergens.map { allergenName ->
+        val lower = allergenName.lowercase()
         val matchesUser = userAllergens.any { user ->
             val u = user.lowercase()
             lower.contains(u) || u.contains(lower)
         }
-        DisplayAllergen(apiName, matchesUser)
+        DisplayAllergen(allergenName, matchesUser)
     }
 
     val containsUserAllergen = displayAllergens.any { it.isUserAllergen }
@@ -188,9 +188,9 @@ fun ResultScreen(
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
-                        apiAllergens.isEmpty() -> {
+                        presentAllergens.isEmpty() -> {
                             Text(
-                                text = "No allergen information available for this item.",
+                                text = "No allergens detected in this product.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -237,16 +237,32 @@ fun ResultScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Other Potential Allergens section (allergens with value == 0)
-            val otherAllergens = food
+            // Other allergens present in product that user hasn't selected
+            val otherPresentAllergens = food
                 ?.food_attributes
                 ?.allergens
                 ?.allergen
-                ?.filter { it.value == 0 && !it.name.isNullOrBlank() }
+                ?.filter { allergen ->
+                    // Must be present in product (value == 1)
+                    allergen.value == 1 && 
+                    !allergen.name.isNullOrBlank() &&
+                    // Must NOT match any of the user's selected allergens
+                    userAllergens.none { userAllergen ->
+                        val allergenName = allergen.name!!.trim().lowercase()
+                        val userAllergenName = userAllergen.lowercase()
+                        allergenName.contains(userAllergenName) || userAllergenName.contains(allergenName)
+                    } &&
+                    // Must NOT already be shown in the main allergens section
+                    presentAllergens.none { mainAllergen ->
+                        val allergenName = allergen.name!!.trim().lowercase()
+                        val mainAllergenName = mainAllergen.lowercase()
+                        allergenName == mainAllergenName
+                    }
+                }
                 ?.map { it.name!!.trim() }
                 ?: emptyList()
 
-            if (otherAllergens.isNotEmpty() || foodState.isLoading || foodState.error != null) {
+            // Always show the "Other Allergens in Product" section
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -259,7 +275,7 @@ fun ResultScreen(
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = "Other Potential Allergens",
+                            text = "Other Allergens in Product",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.SemiBold
                             ),
@@ -284,15 +300,15 @@ fun ResultScreen(
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
-                            otherAllergens.isEmpty() -> {
+                            otherPresentAllergens.isEmpty() -> {
                                 Text(
-                                    text = "No other potential allergens listed for this item.",
+                                    text = "None",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             else -> {
-                                otherAllergens.forEach { allergen ->
+                                otherPresentAllergens.forEach { allergen ->
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.padding(vertical = 4.dp)
@@ -310,7 +326,6 @@ fun ResultScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-            }
 
             // Food Attributes section (preferences)
             val preferences = food
@@ -321,7 +336,7 @@ fun ResultScreen(
                 ?.map { it.name!!.trim() }
                 ?: emptyList()
 
-            if (preferences.isNotEmpty() || foodState.isLoading || foodState.error != null) {
+            // Always show the "Food Attributes" section
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -361,7 +376,7 @@ fun ResultScreen(
                             }
                             preferences.isEmpty() -> {
                                 Text(
-                                    text = "No food attributes available for this item.",
+                                    text = "None",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -383,7 +398,6 @@ fun ResultScreen(
                         }
                     }
                 }
-            }
 
             Spacer(modifier = Modifier.weight(1f))
 
