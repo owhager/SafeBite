@@ -30,7 +30,9 @@ abstract class AllergenDatabase : RoomDatabase() {
                     context.applicationContext,
                     AllergenDatabase::class.java,
                     "safebite_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
