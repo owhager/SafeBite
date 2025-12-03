@@ -6,7 +6,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-
+import com.cs407.safebite.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -19,6 +19,10 @@ import com.cs407.safebite.data.AllergenDatabase
 import com.cs407.safebite.data.RecentScan
 import com.cs407.safebite.data.RecentScanDao
 import com.cs407.safebite.data.RecentScanDatabase
+import okhttp3.Credentials
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
+import retrofit2.http.POST
 
 data class FoodApiResponse(
     val food: FoodData?
@@ -49,6 +53,23 @@ data class AllergenData(
     val allergen: List<Allergen>?
 )
 
+data class OAuthTokenResponse(
+    val access_token: String?,
+    val token_type: String?,
+    val expires_in: Long?
+)
+
+interface OAuthApiService {
+    @FormUrlEncoded
+    @POST("connect/token")
+    suspend fun getAccessToken(
+        @Header("Authorization") basicAuth: String,
+        @Field("grant_type") grantType: String = "client_credentials",
+        @Field("scope") scope: String = "barcode"
+    ): OAuthTokenResponse
+}
+
+
 data class Allergen(
     val id: Long?,   // ID Number for Allergen
     val name: String?, // Allergen Name
@@ -69,7 +90,8 @@ data class RecentItem(
 )
 
 class BarcodeLookupViewModel : ViewModel() {
-
+    private val clientId: String = BuildConfig.FATSECRET_CLIENT_ID
+    private val clientSecret: String = BuildConfig.FATSECRET_CLIENT_SECRET
     private val _foodState: MutableStateFlow<foodState> =
         MutableStateFlow(foodState())
     val foodState = _foodState.asStateFlow()
@@ -118,7 +140,14 @@ class BarcodeLookupViewModel : ViewModel() {
             Log.d("FatSecretAPI", "Fetching food data for $barcode")
             _foodState.update { it.copy(isLoading = true, error = null) }
             try {
+                val basicAuth = Credentials.basic(clientId, clientSecret)
+                val tokenResponse = RetrofitOAuth.oauthApi.getAccessToken(
+                    basicAuth = basicAuth
+                )
+                val accessToken = tokenResponse.access_token
+
                 val response = RetrofitInstance.foodApi.getFoodData(
+                    auth = "Bearer $accessToken",
                     barcode = barcode,
                 )
                 Log.d("FatSecretAPI", "HTTP ${response.code()}")
@@ -226,11 +255,23 @@ class BarcodeLookupViewModel : ViewModel() {
 interface FoodApiService {
     @GET("food/barcode/find-by-id/v2")
     suspend fun getFoodData(
-        @Header("Authorization") auth: String = "Bearer ", //TODO insert token here
+        @Header("Authorization") auth: String,
         @Query("barcode") barcode: String,
         @Query("include_food_attributes") include: String = "true",
         @Query("format") format: String = "json",
     ): Response<FoodApiResponse>
+}
+
+object RetrofitOAuth {
+    private const val OAUTH_BASE_URL = "https://oauth.fatsecret.com/"
+
+    val oauthApi: OAuthApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(OAUTH_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(OAuthApiService::class.java)
+    }
 }
 
 object RetrofitInstance {
