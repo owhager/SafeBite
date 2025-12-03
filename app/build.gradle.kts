@@ -1,4 +1,4 @@
-
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -8,6 +8,13 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version "2.2.20"
+}
+
+val localProps: Properties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        load(file.inputStream())
+    }
 }
 
 android {
@@ -22,6 +29,20 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val clientId = localProps.getProperty("FATSECRET_CLIENT_ID") ?: ""
+        val clientSecret = localProps.getProperty("FATSECRET_CLIENT_SECRET") ?: ""
+
+        buildConfigField(
+            "String",
+            "FATSECRET_CLIENT_ID",
+            "\"$clientId\""
+        )
+        buildConfigField(
+            "String",
+            "FATSECRET_CLIENT_SECRET",
+            "\"$clientSecret\""
+        )
     }
 
     buildTypes {
@@ -42,6 +63,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

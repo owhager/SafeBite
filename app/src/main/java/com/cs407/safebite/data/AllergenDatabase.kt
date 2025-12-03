@@ -8,7 +8,7 @@ import com.cs407.safebite.R
 
 @Database(
     entities = [User::class, Allergen::class, RecentScan::class],
-    version = 2
+    version = 3
 )
 abstract class AllergenDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
