@@ -77,10 +77,11 @@ fun BarcodeScanScreen(
     LaunchedEffect(Unit) { launcher.launch(Manifest.permission.CAMERA) }
 
     fun submitManualIfValid() {
-        val valid = barcode.isNotBlank()
+        val valid = !barcode.isNullOrBlank()
         inputError = !valid
         if (valid) {
             showManual = false
+            barcodeModel.getFoodData(barcode!!)
             onNavigateToResults()
         }
     }
@@ -132,72 +133,128 @@ fun BarcodeScanScreen(
             Dialog(onDismissRequest = { showConfirm = false }) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(12.dp),
-                    tonalElevation = 2.dp
+                    shape = RoundedCornerShape(16.dp),
+                    tonalElevation = 4.dp
                 ) {
                     Column(
                         modifier = Modifier
                             .widthIn(min = 280.dp)
-                            .padding(16.dp),
+                            .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Header
                         Text(
-                            text = "Is this item correct?",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
+                            text = "Confirm scanned item",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = "Is this the item you scanned?",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(Modifier.height(20.dp))
+
+                        // Product box
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 8.dp)
                                 .heightIn(min = 120.dp)
                                 .border(
-                                    width = 3.dp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(12.dp)
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
                             if (barcodeState.isLoading) {
                                 Text(
-                                    text = "Loading...",
+                                    text = "Looking up item...",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             } else {
-                                data?.food?.food_name?.let {
+                                val food = data?.food
+                                if (food != null) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        val brandName = food.brand_name.orEmpty()
+
+                                        // Brand (nullable-safe)
+                                        if (brandName.isNotBlank()) {
+                                            Text(
+                                                text = brandName,
+                                                style = MaterialTheme.typography.labelLarge.copy(
+                                                    fontWeight = FontWeight.SemiBold
+                                                ),
+                                                color = MaterialTheme.colorScheme.secondary
+                                            )
+                                            Spacer(Modifier.height(4.dp))
+                                        }
+
+                                        // Product name – you might want the same treatment if this is also String?
+                                        val productName = food.food_name.orEmpty()
+
+                                        Text(
+                                            text = productName,
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.SemiBold
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                } else {
                                     Text(
-                                        text = data.food.brand_name + it,
+                                        text = "No item details found.",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth()
+                                        color = MaterialTheme.colorScheme.error
                                     )
                                 }
                             }
                         }
 
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(20.dp))
+
+                        // Buttons
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             TextButton(
                                 onClick = {
                                     showConfirm = false
-                                    onNavigateToResults()
-                                }
-                            ) { Text("Yes") }
+                                    showManual = true
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("No", color = MaterialTheme.colorScheme.error)
+                            }
 
-                            TextButton(
+                            Button(
                                 onClick = {
                                     showConfirm = false
-                                    showManual = true
-                                }
-                            ) { Text("No") }
+                                    onNavigateToResults()
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Yes")
+                            }
                         }
                     }
                 }
