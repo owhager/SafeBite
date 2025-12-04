@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
@@ -132,72 +133,155 @@ fun BarcodeScanScreen(
             Dialog(onDismissRequest = { showConfirm = false }) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(12.dp),
-                    tonalElevation = 2.dp
+                    shape = RoundedCornerShape(20.dp),
+                    tonalElevation = 8.dp
                 ) {
                     Column(
                         modifier = Modifier
-                            .widthIn(min = 280.dp)
-                            .padding(16.dp),
+                            .widthIn(min = 300.dp, max = 400.dp)
+                            .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "Is this item correct?",
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            ),
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
 
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(24.dp))
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp)
-                                .heightIn(min = 120.dp)
+                                .heightIn(min = 140.dp)
+                                .padding(horizontal = 4.dp)
                                 .border(
-                                    width = 3.dp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                ),
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .padding(16.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             if (barcodeState.isLoading) {
                                 Text(
                                     text = "Loading...",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                 )
                             } else {
-                                data?.food?.food_name?.let {
-                                    Text(
-                                        text = data.food.brand_name + it,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        textAlign = TextAlign.Center,
+                                data?.food?.food_name?.let { foodName ->
+                                    val brandName = data.food.brand_name ?: ""
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier.fillMaxWidth()
-                                    )
+                                    ) {
+                                        if (brandName.isNotEmpty()) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Text(
+                                                    text = "Brand: ",
+                                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.Medium
+                                                    ),
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                                    textAlign = TextAlign.Center
+                                                )
+                                                Text(
+                                                    text = brandName,
+                                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.SemiBold
+                                                    ),
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
+                                            Spacer(Modifier.height(12.dp))
+                                        }
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Text(
+                                                text = "Item: ",
+                                                style = MaterialTheme.typography.bodyLarge.copy(
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                ),
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                                textAlign = TextAlign.Center
+                                            )
+                                            Text(
+                                                text = foodName,
+                                                style = MaterialTheme.typography.bodyLarge.copy(
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
 
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(24.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            TextButton(
+                            Button(
                                 onClick = {
                                     showConfirm = false
                                     onNavigateToResults()
-                                }
-                            ) { Text("Yes") }
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = "Yes",
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                            }
 
-                            TextButton(
+                            OutlinedButton(
                                 onClick = {
                                     showConfirm = false
                                     showManual = true
-                                }
-                            ) { Text("No") }
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = "No",
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                            }
                         }
                     }
                 }

@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         applicationId = "com.cs407.safebite"
-        minSdk = 34
+        minSdk = 30
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"

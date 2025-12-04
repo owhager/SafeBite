@@ -226,7 +226,7 @@ class BarcodeLookupViewModel : ViewModel() {
 interface FoodApiService {
     @GET("food/barcode/find-by-id/v2")
     suspend fun getFoodData(
-        @Header("Authorization") auth: String = "Bearer ", //TODO insert token here
+        @Header("Authorization") auth: String = "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk0Q0NGMUU4RTI4RUM3RkM4QTc2RTcyNTM4M0E4RjM0OUU3MUUzRjAiLCJ0eXAiOiJhdCtqd3QiLCJ4NXQiOiJsTXp4Nk9LT3hfeUtkdWNsT0RxUE5KNXg0X0EifQ.eyJuYmYiOjE3NjQ4NjkzNjMsImV4cCI6MTc2NDk1NTc2MywiaXNzIjoiaHR0cHM6Ly9vYXV0aC5mYXRzZWNyZXQuY29tIiwiYXVkIjoiYmFyY29kZSIsImNsaWVudF9pZCI6ImE1MTEwODg4ZWFhNzQ3NjA5MGRiY2ZiZDViNzYwY2FhIiwic2NvcGUiOlsiYmFyY29kZSJdfQ.Djw2XhtKyc_1mLHze7NUg7S_oo3ykuWNZRo6KSN6XJ1FeYyci3tyHuwj3heG3OK5rOJ2dDxIQmrwdbWviXumb7uPujJPmHQBHRORQdYoZFH99arvXDS_NdnQXcSGUPXQuj8IgmtQWhk9-tErkaYvruq6cPXE1vZSlkAkEqvqMfq7cOfe5v2CTt1CIs0xZsOLl7hV5YwkSfdAGKDecCOAVKyACD_0Jih2dlR5-fs1emMQqw_im7XvqWY44NXCfNKPk2sRfmBFdFTxgRgzpZMQg56ml7RoQ-gCmnKtlkkmO1Q4Cphw6OmRiemSNTQE2opr6uxDChNKmsb4MTO7uPIVlSchv7zeT9Pr5wJ0nABNbc7qUQSfK5ny6jK4LT147P2IY8WAs8pvPHWtOL3RYZAew8tOqiI-W8VWpEk4Lu3fuC5zZY4GTu3TGnDHuPGFTw8UeA2lXs9WBkRg1nZ3ZesCTQN3YTZmbqqB2ikWdQN7tcNdL06EJHi-OaVx2HXupp72Zd8D2IUBYxGh2EDpJnONtMNglJLzDV2wr6GUb3-VvCMGLPrFjfdcRsuAusuu_fNjYCt21t23iUciCm5_EQJfVj12H3uLyV0Pa_Xelob3-YUn4GB6zOuua4X77JJG3pDUtd8dvLInNstEIsKsgJDrYvz7eiHqLeuKA9RQCQXMNmM",
         @Query("barcode") barcode: String,
         @Query("include_food_attributes") include: String = "true",
         @Query("format") format: String = "json",
