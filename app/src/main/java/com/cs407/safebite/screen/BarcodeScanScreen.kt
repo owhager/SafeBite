@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
@@ -169,8 +170,8 @@ fun BarcodeScanScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp)
-                                .heightIn(min = 120.dp)
+                                .heightIn(min = 140.dp)
+                                .padding(horizontal = 4.dp)
                                 .border(
                                     width = 2.dp,
                                     color = MaterialTheme.colorScheme.primary,
@@ -236,7 +237,7 @@ fun BarcodeScanScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            TextButton(
+                            Button(
                                 onClick = {
                                     showConfirm = false
                                     showManual = true
