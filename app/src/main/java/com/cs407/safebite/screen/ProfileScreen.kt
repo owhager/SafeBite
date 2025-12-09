@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,17 +31,6 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val masterAllergens = listOf(
-        "Peanut", "Milk", "Egg", "Fish", "Gluten",
-        "Lactose", "Nuts", "Sesame", "Shellfish", "Soy"
-    )
-
-    // Observe checked allergens from ViewModel
-//    val checkedItems by remember { mutableStateOf(allergenViewModel?.checked) }
-//    print(checkedItems)
-
-//    val checkedItems = allergenViewModel.checkedItems()
-
     val checkedItems = allergenViewModel?.checked ?: emptyList()
 
     // In both ProfileScreen and InputScreen
@@ -87,25 +77,32 @@ fun ProfileScreen(
             )
 
             // Show only checked allergens
-            if (checkedItems?.isEmpty() ?: false) {
+            if (checkedItems.isEmpty()) {
                 Text(
                     text = "No allergens selected yet.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                checkedItems?.forEach { item ->
+                checkedItems.forEach { item ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Checkbox(
-                            checked = true,
-                            onCheckedChange = { allergenViewModel?.toggle(item) }
-                        )
-                        Spacer(Modifier.width(8.dp))
+
+                        IconButton(
+                            onClick = { allergenViewModel.toggle(item) }  // or remove(item)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Remove allergen",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+
                         Text(
                             text = item,
                             style = MaterialTheme.typography.bodyLarge,
@@ -113,6 +110,7 @@ fun ProfileScreen(
                         )
                     }
                 }
+
             }
 
             Spacer(Modifier.weight(1f))

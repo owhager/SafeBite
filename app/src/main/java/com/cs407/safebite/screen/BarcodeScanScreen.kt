@@ -78,10 +78,11 @@ fun BarcodeScanScreen(
     LaunchedEffect(Unit) { launcher.launch(Manifest.permission.CAMERA) }
 
     fun submitManualIfValid() {
-        val valid = barcode.isNotBlank()
+        val valid = !barcode.isNullOrBlank()
         inputError = !valid
         if (valid) {
             showManual = false
+            barcodeModel.getFoodData(barcode!!)
             onNavigateToResults()
         }
     }
@@ -133,28 +134,39 @@ fun BarcodeScanScreen(
             Dialog(onDismissRequest = { showConfirm = false }) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(20.dp),
-                    tonalElevation = 8.dp
+                    shape = RoundedCornerShape(16.dp),
+                    tonalElevation = 4.dp
                 ) {
                     Column(
                         modifier = Modifier
-                            .widthIn(min = 300.dp, max = 400.dp)
-                            .padding(24.dp),
+                            .widthIn(min = 280.dp)
+                            .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Header
                         Text(
-                            text = "Is this item correct?",
+                            text = "Confirm scanned item",
                             style = MaterialTheme.typography.titleLarge.copy(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
+                                fontWeight = FontWeight.Bold
                             ),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = "Is this the item you scanned?",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(Modifier.height(20.dp))
+
+                        // Product box
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -162,125 +174,87 @@ fun BarcodeScanScreen(
                                 .padding(horizontal = 4.dp)
                                 .border(
                                     width = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                    color = MaterialTheme.colorScheme.primary,
                                     shape = RoundedCornerShape(12.dp)
-                                )
-                                .padding(16.dp),
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             if (barcodeState.isLoading) {
                                 Text(
-                                    text = "Loading...",
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    text = "Looking up item...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             } else {
-                                data?.food?.food_name?.let { foodName ->
-                                    val brandName = data.food.brand_name ?: ""
+                                val food = data?.food
+                                if (food != null) {
                                     Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        if (brandName.isNotEmpty()) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.Center
-                                            ) {
-                                                Text(
-                                                    text = "Brand: ",
-                                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                                        fontSize = 16.sp,
-                                                        fontWeight = FontWeight.Medium
-                                                    ),
-                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                                    textAlign = TextAlign.Center
-                                                )
-                                                Text(
-                                                    text = brandName,
-                                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                                        fontSize = 16.sp,
-                                                        fontWeight = FontWeight.SemiBold
-                                                    ),
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                            }
-                                            Spacer(Modifier.height(12.dp))
-                                        }
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
+                                        val brandName = food.brand_name.orEmpty()
+
+                                        // Brand (nullable-safe)
+                                        if (brandName.isNotBlank()) {
                                             Text(
-                                                text = "Item: ",
-                                                style = MaterialTheme.typography.bodyLarge.copy(
-                                                    fontSize = 16.sp,
-                                                    fontWeight = FontWeight.Medium
+                                                text = brandName,
+                                                style = MaterialTheme.typography.labelLarge.copy(
+                                                    fontWeight = FontWeight.SemiBold
                                                 ),
-                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                                textAlign = TextAlign.Center
+                                                color = MaterialTheme.colorScheme.secondary
                                             )
-                                            Text(
-                                                text = foodName,
-                                                style = MaterialTheme.typography.bodyLarge.copy(
-                                                    fontSize = 16.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                ),
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                textAlign = TextAlign.Center
-                                            )
+                                            Spacer(Modifier.height(4.dp))
                                         }
+
+                                        // Product name – you might want the same treatment if this is also String?
+                                        val productName = food.food_name.orEmpty()
+
+                                        Text(
+                                            text = productName,
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.SemiBold
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            textAlign = TextAlign.Center
+                                        )
                                     }
+                                } else {
+                                    Text(
+                                        text = "No item details found.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
                                 }
                             }
                         }
 
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(20.dp))
+
+                        // Buttons
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
+                            Button(
+                                onClick = {
+                                    showConfirm = false
+                                    showManual = true
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("No", color = MaterialTheme.colorScheme.error)
+                            }
+
                             Button(
                                 onClick = {
                                     showConfirm = false
                                     onNavigateToResults()
                                 },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 8.dp),
-                                shape = RoundedCornerShape(12.dp)
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Text(
-                                    text = "Yes",
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    ),
-                                    modifier = Modifier.padding(vertical = 4.dp)
-                                )
-                            }
-
-                            OutlinedButton(
-                                onClick = {
-                                    showConfirm = false
-                                    showManual = true
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 8.dp),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    text = "No",
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    ),
-                                    modifier = Modifier.padding(vertical = 4.dp)
-                                )
+                                Text("Yes")
                             }
                         }
                     }
